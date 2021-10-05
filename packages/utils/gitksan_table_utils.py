@@ -1,4 +1,6 @@
 import unicodedata as ud
+from sklearn.model_selection import train_test_split
+from functools import partial
 import pandas as pd
 from collections import Counter
 from itertools import combinations, permutations
@@ -11,7 +13,6 @@ def obtain_orthographic_value(entry):
 def obtain_tag(entry):
     values = entry.split('\t')
     return values[0].strip().replace("-", ";")
-
 
 def is_empty_entry(entry):
     return "\t_\t_\t_\t_" in entry
@@ -171,3 +172,74 @@ def make_reinflection_frame(paradigms, include_root):
         "paradigm": paradigm_names
     })
     return paradigm_frame 
+
+def extract_non_empty_paradigms(paradigm_fname):
+    num_paradigms = 0
+    non_empty_paradigms = []
+    for paradigm in stream_all_paradigms(paradigm_fname):
+        num_paradigms += 1
+        if not paradigm.is_empty():
+            non_empty_paradigms.append(paradigm)
+    print(f"Read {num_paradigms} paradigms!")
+    print(f"There are {len(non_empty_paradigms)} non-empty paradigms")
+    return non_empty_paradigms
+
+def write_mc_file(data_fname, frame):
+    def _write_reinflection_line(mc_data_file, row):
+        source_tag = row.source_tag
+        target_tag = row.target_tag
+
+        mc_format_tag = combine_tags(source_tag, target_tag)
+        reinflection_line = f'{strip_accents(row.source_form.strip())}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\n'
+        line_elems = reinflection_line.split('\t')
+        assert len(line_elems) == 3
+        mc_data_file.write(reinflection_line)
+
+    with open(f'data/spreadsheets/{data_fname}', 'w') as mc_data_file:
+        frame.apply(partial(_write_reinflection_line, mc_data_file), axis=1)
+
+def make_train_dev_test_files(frame, dir_suffix, obtain_tdt_split):
+    train_frame, dev_frame, test_frame = obtain_tdt_split(frame)
+    write_mc_file("random_split" + dir_suffix + "/gitksan_productive.train", train_frame)
+    write_mc_file("random_split" + dir_suffix + "/gitksan_productive.dev", dev_frame)
+    write_mc_file("random_split" + dir_suffix + "/gitksan_productive.test", test_frame)
+    make_covered_test_file("random_split" + dir_suffix + "/gitksan-test-covered", test_frame)
+
+def obtain_train_dev_test_split(frame, train_ratio=0.8, dev_ratio=0.1, test_ratio=0.1):
+    x_train, x_test = train_test_split(frame, test_size=1 - train_ratio)
+    x_val, x_test = train_test_split(x_test, test_size=test_ratio/(test_ratio + dev_ratio), shuffle=False)
+    return x_train, x_val, x_test
+
+def make_covered_test_file(path_fname, test_frame):
+    def _write_test_covered_line(test_covered_f, row):
+        target_tag = row.target_tag
+
+        reinflection_line = f'{strip_accents(row.source_form.strip())}\t{target_tag}\n'
+        line_elems = reinflection_line.split('\t')
+        assert len(line_elems) == 2
+        test_covered_f.write(reinflection_line)
+    with open(f'data/spreadsheets/{path_fname}', 'w') as test_covered_f:
+        test_frame.apply(partial(_write_test_covered_line, test_covered_f), axis=1)
+
+    # inputs = []
+    # tags = []
+    # with open("data/spreadsheets/gitksan_productive.test", 'r') as gitksan_test_file:
+    #     for line in gitksan_test_file:
+    #         i_form, o_form, tag = line.split('\t') 
+    #         inputs.append(i_form)
+    #         tags.append(tag)
+    # with open('data/spreadsheets/gitksan_productive_covered.test', 'w') as gitksan_test_file_covered:
+    #     for i in range(len(inputs)):
+    #         i_form = inputs[i]
+    #         tag = tags[i]
+    #         gitksan_test_file_covered.write(f'{i_form}\t{tag}')
+
+def make_train_dev_seen_unseen_test_files(frame, dir_suffix):
+    train_frame, dev_frame, test_frame = obtain_train_dev_test_split(frame)
+    train_frame, seen_test_frame = obtain_seen_test_frame(train_frame)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.train', train_frame)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.dev', dev_frame)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', test_frame)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame)
+    make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', test_frame)
+    make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', test_frame)

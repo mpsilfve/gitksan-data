@@ -29,3 +29,18 @@ def plot_feat_distribution(frame):
     count_frame = count_frame.sort_values(by='count', ascending=False)
     sns.barplot(x='tag_feat', y='count',  ci=None, data=count_frame)
     store_pic_dynamic(plt, 'paradigm_feat_freq')
+
+def plot_fullness_dist(paradigms):
+    """Plot histogram with number of forms in x axis and number of paradigms with that many
+    forms in the y-axis.
+
+    Args:
+        paradigms ([Paradigm]): Stream of (non-empty) paradigms
+    """
+    paradigm_sizes = []
+    for paradigm in paradigms:
+        paradigm_sizes.append(paradigm.count_num_forms())
+    sns.histplot(data=paradigm_sizes)
+    plt.xlabel("Number of entries in paradigm")
+    plt.ylabel("Number of paradigms")
+    store_pic_dynamic(plt, 'paradigm_num_forms_hist')
