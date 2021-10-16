@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 # from ..packages.utils.gitksan_table_utils import get_paradigm_to_counts, obtain_seen_test_frame
-from packages.utils.gitksan_table_utils import get_paradigm_to_counts, obtain_seen_test_frame, strip_accents
+from packages.utils.gitksan_table_utils import get_paradigm_to_counts, obtain_seen_test_frame, strip_accents, stream_all_paradigms
 from itertools import combinations, permutations
 
 
@@ -39,3 +39,20 @@ def test_paradigm_combinations():
     form_tag_pairs = [("sdik'eekwt", "X;IN:ROOT;IN:3.II"), ("sdik'eegwin", "X;IN:ROOT;IN:2SG.II"), ("sdik'eegwin", "X;IN:ROOT;IN:2SG.II")]
     source_target_combinations = permutations(form_tag_pairs, 2)
     assert (len(list(source_target_combinations))) == 6
+
+# TODO: this only tests if consecutive tags are the same; not global ones...
+def test_all_paradigms_with_same_msds():
+    first_msds = None
+    for paradigm in stream_all_paradigms('whitespace-inflection-tables-gitksan-productive.txt'):
+        if first_msds is None:
+            first_msds = paradigm.get_all_msds()
+        else:
+            assert first_msds == paradigm.get_all_msds()
+            
+
+# NOTE: i already tested this visually; see 2021-09-23 report 
+# def test_all_cells_filled_at_least_once():
+#     msds = None
+#     for paradigm in stream_all_paradigms('whitespace-inflection-tables-gitksan-productive.txt'):
+#         if msds is None:
+#             msds = paradigm.get_all_msds()

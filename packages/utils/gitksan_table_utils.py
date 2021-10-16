@@ -4,15 +4,8 @@ from functools import partial
 import pandas as pd
 from collections import Counter
 from itertools import combinations, permutations
-from .paradigm import Paradigm
+from .paradigm import *
 
-def obtain_orthographic_value(entry):
-    values = entry.split('\t') 
-    return values[3].strip()
-
-def obtain_tag(entry):
-    values = entry.split('\t')
-    return values[0].strip().replace("-", ";")
 
 def is_empty_entry(entry):
     return "\t_\t_\t_\t_" in entry
@@ -106,14 +99,15 @@ def strip_accents(s):
 def stream_all_paradigms(fname):
     with open(fname, 'r') as gp_f:
         gp_f.readline()
-        line_num = 0
+        paradigm_num = 0
         for paradigm_block in gp_f:
             line = paradigm_block
             paradigm = []
             while line != "\n" and line != "": # (start of new paradigm) 
                 paradigm.append(line)
                 line = gp_f.readline()
-            yield Paradigm(paradigm)
+            yield Paradigm(paradigm, paradigm_num)
+            paradigm_num += 1
 
 def make_reinflection_frame(paradigms, include_root):
     """Creates a DataFrame containing every two word-form permutation in every paradigm
@@ -139,7 +133,7 @@ def make_reinflection_frame(paradigms, include_root):
     source_tags = []
     target_forms = []
     target_tags = []
-    paradigm_names = []
+    paradigm_indices = []
     for paradigm in mult_entry_paradigms:
         form_tag_pairs = []
         for entry in paradigm.entries: 
@@ -163,13 +157,13 @@ def make_reinflection_frame(paradigms, include_root):
             target_forms.append(source_target_comb[1][0])
             target_tags.append(source_target_comb[1][1])
             num_combs += 1
-        paradigm_names.extend([paradigm.get_roots()] * num_combs)
+        paradigm_indices.extend([paradigm.paradigm_index] * num_combs)
     paradigm_frame = pd.DataFrame({
         "source_form": source_forms, 
         "source_tag": source_tags, 
         "target_form": target_forms,
         "target_tag": target_tags, 
-        "paradigm": paradigm_names
+        "paradigm": paradigm_indices 
     })
     return paradigm_frame 
 

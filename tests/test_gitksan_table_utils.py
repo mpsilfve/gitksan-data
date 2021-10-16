@@ -156,8 +156,7 @@ def test_write_mc_file(reinflection_frame, mc_file_resource):
     #         frame.apply(partial(_write_reinflection_line, mc_data_file), axis=1)
 
 # TODO; try this out tomorrow 
-def test_make_train_dev_test_files(reinflection_frame):
-    transform_src = lambda frame: frame['']
+def test_make_train_dev_test_files(reinflection_frame, train_dev_test_file_resources):
     def _transform_src(frame, prefix):
         frame['source_form'] = frame['source_form'].apply(lambda src: src + prefix)
         return frame
@@ -165,10 +164,11 @@ def test_make_train_dev_test_files(reinflection_frame):
     dev_reinflection_frame = _transform_src(reinflection_frame.copy(), '_dev')
     test_reinflection_frame = _transform_src(reinflection_frame.copy(), '_test')
 
-    obtain_tdt_split = lambda fr: train_reinflection_frame, dev_reinflection_frame, test_reinflection_frame
-    make_train_dev_test_files(reinflection_frame, '_tests', obtain_tdt_split)
+    def _obtain_tdt_split(frame):
+        return train_reinflection_frame, dev_reinflection_frame, test_reinflection_frame
+    make_train_dev_test_files(reinflection_frame, '_tests', _obtain_tdt_split)
     for ftype in ['train', 'dev', 'test']: 
-        with open(f'random_split_tests/gitksan_productive.{ftype}', 'r') as mc_file:
+        with open(f'data/spreadsheets/random_split_tests/gitksan_productive.{ftype}', 'r') as mc_file:
             for line in mc_file:
                 if line != '\n':
                     src_form = line.split('\t')[0]
@@ -201,4 +201,3 @@ def train_dev_test_file_resources():
 @pytest.fixture()
 def reinflection_frame():
     return pd.read_csv('tests/reinflection_frame.csv')
-

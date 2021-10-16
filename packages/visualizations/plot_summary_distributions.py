@@ -44,3 +44,15 @@ def plot_fullness_dist(paradigms):
     plt.xlabel("Number of entries in paradigm")
     plt.ylabel("Number of paradigms")
     store_pic_dynamic(plt, 'paradigm_num_forms_hist')
+
+def plot_msd_distribution(frame):
+    """Plot the frequency with which cells (msds) are filled in the paradigm data
+    Args:
+        frame (pd.DataFrame): |tag|form| 
+    """
+    sns.histplot(data=frame, x="tag")
+    plt.xlabel("Cell/MSD")
+    plt.xticks(rotation=45, ha='right')
+    plt.ylabel("Number of times cell is filled")
+    plt.tight_layout()
+    store_pic_dynamic(plt, 'paradigm_msd_dist')
