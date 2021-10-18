@@ -78,14 +78,13 @@ def make_reinflection_frame_csv(include_root):
     fname = "whitespace-inflection-tables-gitksan-productive.txt"
     paradigms = extract_non_empty_paradigms(fname)
     paradigm_frame = make_reinflection_frame(paradigms, include_root)
-
     include_root_suffix = "_w_root" if include_root else ""
     store_csv_dynamic(paradigm_frame, "reinflection_frame" + include_root_suffix)
 
 def make_cross_table_reinflection_frame_csv():
     fname = "whitespace-inflection-tables-gitksan-productive.txt"
     paradigms = extract_non_empty_paradigms(fname)
-    reinflection_frame = pd.read_csv(f'results/2021-10-10/reinflection_frame_w_root.csv')
+    reinflection_frame = pd.read_csv(f'results/2021-10-18/reinflection_frame_w_root.csv')
     cross_table_frame = create_cross_table_reinflection_frame(reinflection_frame, paradigms)
     store_csv_dynamic(cross_table_frame, "cross_table_reinflection_frame")
 
@@ -100,25 +99,48 @@ def plot_num_forms_per_msd():
     all_tags = []
     for paradigm in paradigms:
         for form, tag in paradigm.stream_form_tag_pairs():
-            all_forms.append(form)
             all_tags.append(tag)
     frame = pd.DataFrame({"form": all_forms, "tag": all_tags})
     print(frame['tag'].value_counts())
     # plot_msd_distribution(frame)
+
+def make_train_dev_seen_unseen_test_files_tl(): # top level
+    def _write_reinflection_line(mc_data_file, row):
+        source_tag = row.source_tag
+        target_tag = row.target_tag
+
+        mc_format_tag = combine_tags(source_tag, target_tag)
+        reinflection_line = f'{strip_accents(row.source_form.strip())}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\n'
+        line_elems = reinflection_line.split('\t')
+        assert len(line_elems) == 3
+        mc_data_file.write(reinflection_line)
+    reinflection_frame_fname = 'reinflection_frame_w_root.csv' 
+    frame = pd.read_csv(f'results/2021-10-18/{reinflection_frame_fname}')
+    make_train_dev_seen_unseen_test_files(frame, '_w_root', _write_reinflection_line)
+
+def make_cross_table_train_dev_seen_unseen_test_files():
+    def _write_reinflection_line(mc_data_file, row):
+        source_tag = row.source_tag
+        target_tag = row.target_tag
+
+        mc_format_tag = combine_tags(source_tag, target_tag)
+        reinflection_line = f'{strip_accents(row.source_form.strip())}_{strip_accents(row.cross_table_src)}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\n'
+        line_elems = reinflection_line.split('\t')
+        assert len(line_elems) == 3
+        mc_data_file.write(reinflection_line)
+    reinflection_frame_fname = 'cross_table_reinflection_frame.csv' 
+    frame = pd.read_csv(f'results/2021-10-18/{reinflection_frame_fname}')
+    make_train_dev_seen_unseen_test_files(frame, '_w_root_cross_table', _write_reinflection_line)
 
 def main(args):
     if args.make_reinflection_frame_csv:
         make_reinflection_frame_csv(args.include_root)
     elif args.make_cross_table_reinflection_frame_csv:
         make_cross_table_reinflection_frame_csv()
-    elif args.make_train_dev_test_files_random_sample or args.make_train_dev_test_files_random_sample == '':
-        reinflection_frame_fname = 'reinflection_frame.csv' if args.make_train_dev_test_files_random_sample != '_w_root' else 'reinflection_frame_w_root.csv'
-        frame = pd.read_csv(f'results/2021-09-30/{reinflection_frame_fname}')
-        make_train_dev_test_files(frame, args.make_train_dev_test_files_random_sample, obtain_train_dev_test_split)
-    elif args.make_train_dev_seen_unseen_test_files or args.make_train_dev_seen_unseen_test_files == '':
-        reinflection_frame_fname = 'reinflection_frame.csv' if args.make_train_dev_seen_unseen_test_files != '_w_root' else 'reinflection_frame_w_root.csv'
-        frame = pd.read_csv(f'results/2021-09-30/{reinflection_frame_fname}')
-        make_train_dev_seen_unseen_test_files(frame, args.make_train_dev_seen_unseen_test_files)
+    elif args.make_train_dev_seen_unseen_test_files: 
+        make_train_dev_seen_unseen_test_files_tl()
+    elif args.make_cross_table_train_dev_seen_unseen_test_files: 
+        make_cross_table_train_dev_seen_unseen_test_files()
     elif args.diagnose_train_dev_test_files:
         diagnose_train_dev_test_files()
     elif args.make_covered_test_file:
@@ -139,8 +161,8 @@ if __name__ == "__main__":
     parser.add_argument('--make_cross_table_reinflection_frame_csv', action='store_true')
     parser.add_argument('--include_root', action='store_true')
 
-    parser.add_argument('--make_train_dev_test_files_random_sample', nargs='?', type=str, const='')
-    parser.add_argument('--make_train_dev_seen_unseen_test_files', nargs='?', type=str, const='' )
+    parser.add_argument('--make_train_dev_seen_unseen_test_files', action='store_true')
+    parser.add_argument('--make_cross_table_train_dev_seen_unseen_test_files', action='store_true')
 
     parser.add_argument('--make_covered_test_file', action='store_true')
     parser.add_argument('--diagnose_train_dev_test_files', action='store_true')

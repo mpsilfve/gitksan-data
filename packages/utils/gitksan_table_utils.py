@@ -178,19 +178,16 @@ def extract_non_empty_paradigms(paradigm_fname):
     print(f"There are {len(non_empty_paradigms)} non-empty paradigms")
     return non_empty_paradigms
 
-def write_mc_file(data_fname, frame):
-    def _write_reinflection_line(mc_data_file, row):
-        source_tag = row.source_tag
-        target_tag = row.target_tag
+def write_mc_file(data_fname, frame, write_reinflection_line):
+    """[summary]
 
-        mc_format_tag = combine_tags(source_tag, target_tag)
-        reinflection_line = f'{strip_accents(row.source_form.strip())}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\n'
-        line_elems = reinflection_line.split('\t')
-        assert len(line_elems) == 3
-        mc_data_file.write(reinflection_line)
-
+    Args:
+        data_fname ([type]): [description]
+        frame ([type]): [description]
+        write_reinflection_line ([type]): [description]
+    """
     with open(f'data/spreadsheets/{data_fname}', 'w') as mc_data_file:
-        frame.apply(partial(_write_reinflection_line, mc_data_file), axis=1)
+        frame.apply(partial(write_reinflection_line, mc_data_file), axis=1)
 
 def make_train_dev_test_files(frame, dir_suffix, obtain_tdt_split):
     train_frame, dev_frame, test_frame = obtain_tdt_split(frame)
@@ -228,12 +225,19 @@ def make_covered_test_file(path_fname, test_frame):
     #         tag = tags[i]
     #         gitksan_test_file_covered.write(f'{i_form}\t{tag}')
 
-def make_train_dev_seen_unseen_test_files(frame, dir_suffix):
+# TODO: can get rid of dir_suffix; w_root is practically always better.
+def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
+    """
+    Args:
+        frame (pd.DataFrame): Reinflection frame
+        dir_suffix (str): w_root
+        write_reinflection_line ((pd.DataFrame) => str): Converts row in {frame} to a string representing entry in inflection dataset.
+    """
     train_frame, dev_frame, test_frame = obtain_train_dev_test_split(frame)
     train_frame, seen_test_frame = obtain_seen_test_frame(train_frame)
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.train', train_frame)
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.dev', dev_frame)
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', test_frame)
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.train', train_frame, proc_frame_row)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.dev', dev_frame, proc_frame_row)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', test_frame, proc_frame_row)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame, proc_frame_row)
     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', test_frame)
     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', test_frame)
