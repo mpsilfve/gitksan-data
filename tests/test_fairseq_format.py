@@ -1,8 +1,8 @@
 import pytest
 import os 
-from ..packages.fairseq.fairseq_format import reformat
+from packages.fairseq.fairseq_format import reformat
 
-def test_reformat():
+def test_reformat(fairseq_format_files):
     train_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive.train"
     fsrc = "data/spreadsheets/tests/crosstable_fairseq.src"
     ftrg = "data/spreadsheets/tests/crosstable_fairseq.trg"
