@@ -26,7 +26,7 @@ def reformat(fname, finputname, foutputname):
             if '.' in pos:
                 pos = pos.split('.')[0]
             #input = [letter for letter in lemma] + [pos, 'CANONICAL'] + ['#'] + [tag for tag in msd.split(';')]
-            input = [letter for letter in lemma] + [tag for tag in msd.split(';')]
+            input = [letter for letter in lemma] + [tag for tag in msd.split(';')[1:]] # NOTE: I don't include POS (position 0 in msd) for Gitksan. Should be changed for other languages.
             output = [letter for letter in form]
             finput.write(' '.join(input) + '\n')
             foutput.write(' '.join(output) + '\n')
