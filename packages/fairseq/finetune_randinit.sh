@@ -1,28 +1,22 @@
 #!/bin/bash
-​
 #SBATCH --account=def-msilfver
-#SBATCH --time 00:30:00
 #SBATCH --gres=gpu:1
-#SBATCH --mem=4000M
-#SBATCH --mail-user=fsamir8@mail.ubc.ca
-#SBATCH --job-name=lstm_randinit_train
+#SBATCH --mem=5G
+#SBATCH --time 00:30:00
+#SBATCH --job-name=TransformerRandinitTrain
 #SBATCH --output=/scratch/fsamir8/finetune_randinit/gitksan.out
 #SBATCH --error=/scratch/fsamir8/finetune_randinit/gitksan.error
 
-​
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/NVIDIA/cuda-9.0/lib64
-​
-# define paths
+export CUDA_VISIBLE_DEVICES=0
 PREPROCESS=/project/rrg-msilfver/fsamir8/gitksan-data/results
 SAVEPREF=/scratch/fsamir8/finetune_randinit
-​
-# init environment
+
 cd /project/rrg-msilfver/fsamir8
 source py3env/bin/activate
-​
-export CUDA_VISIBLE_DEVICES=0
-​
+
 fairseq-train $PREPROCESS \
+    --no-epoch-checkpoints \
     --source-lang src \
     --target-lang tgt \
     --save-dir $SAVEPREF \
@@ -41,17 +35,17 @@ fairseq-train $PREPROCESS \
     --relu-dropout 0 \
     --weight-decay 0 \
     --criterion label_smoothed_cross_entropy --label-smoothing 0.2 \
-    --optimizer adam --adam-betas '(0.9, 0.98)' \
-    --batch-size 400
+    --optimizer adam --adam-betas '(0.9, 0.999)' \
+    --batch-size 400 \
     --clip-norm 0 \
     --lr-scheduler inverse_sqrt \
-    --warmup-updates 400 \
-    --warmup-init-lr 1e-7 --lr 0.0005 --min-lr 1e-9 \
-    --no-epoch-checkpoints \
+    --warmup-updates 4000 \
+    --warmup-init-lr 1e-7 --lr 0.001 --stop-min-lr 1e-9 \
+    --keep-interval-updates 20 \
     --max-tokens 2000 \
+    --max-update 20000 \
     --update-freq 1 \
-    --max-epoch 500 \
-    --ddp-backend=no_c10d \
-    --save-interval 4 \
-    --save-interval-updates 1000 --keep-interval-updates 20 \
-    --log-format json --log-interval 20 \
+    --max-epoch 1000 \
+    --log-format json --log-interval 20 
+EOF
+
