@@ -15,10 +15,10 @@ def reformat(fname, finputname, foutputname):
         for line in f:
             lines = line.strip().split('\t')
             lemma = lines[0].strip().replace(' ', '_')
-            msd = lines[-1].strip().replace(' ', '_')
-            if len(lines) == 3:
+            msd = lines[-2].strip().replace(' ', '_')
+            if len(lines) == 4:
                 form = lines[1].strip().replace(' ', '_')
-            elif len(lines) == 2:
+            elif len(lines) == 2: # for covered files?
                 form = '-'
             else:
                 print('Please make sure each line in your file is a tab separated 3-column entry.')

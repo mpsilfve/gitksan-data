@@ -5,6 +5,7 @@ import pandas as pd
 from collections import Counter
 from itertools import combinations, permutations
 from .paradigm import *
+from .utils import map_list 
 
 
 def is_empty_entry(entry):
@@ -19,6 +20,12 @@ def combine_tags(source_tag, target_tag):
     source_tag_str = ";".join(source_feats)
     target_tag_str = ";".join(target_feats)
     return f"X;{source_tag_str};{target_tag_str}"
+
+def filter_prefix(prefix, tag):
+    elems = tag.split(f'{prefix}:')
+    tag = ''.join(elems)
+    tag = ';'.join(tag.split(';'))
+    return tag
 
 def get_paradigm_to_counts(frame):
     paradigm_to_counts = frame['paradigm'].value_counts()
@@ -197,7 +204,7 @@ def make_train_dev_test_files(frame, dir_suffix, obtain_tdt_split):
     make_covered_test_file("random_split" + dir_suffix + "/gitksan-test-covered", test_frame)
 
 def obtain_train_dev_test_split(frame, train_ratio=0.8, dev_ratio=0.1, test_ratio=0.1):
-    x_train, x_test = train_test_split(frame, test_size=1 - train_ratio)
+    x_train, x_test = train_test_split(frame, test_size=1 - train_ratio, random_state=0)
     x_val, x_test = train_test_split(x_test, test_size=test_ratio/(test_ratio + dev_ratio), shuffle=False)
     return x_train, x_val, x_test
 
@@ -241,3 +248,50 @@ def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame, proc_frame_row)
     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', test_frame)
     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', test_frame)
+
+def get_target_to_paradigm_mapping(paradigms):
+    """Returns a target to paradigm mapping.
+
+    Args:
+        paradigms ([Paradigm]): List of non_empty paradigms read from `whitespace-inflection-tables-gitksan-productive.txt`. Should be in order according to that file.
+    """
+    form_msd_to_paradigm = {}
+    for i in range(len(paradigms)):
+        paradigm = paradigms[i]
+        for form, tag in paradigm.stream_form_tag_pairs():
+            if f'{form}_{tag}' in form_msd_to_paradigm:
+                assert form_msd_to_paradigm[f'{form}_{tag}'] == i, f"{form}_{tag} in paradigm {i} and in {form_msd_to_paradigm[f'{form}_{tag}']}" 
+            form_msd_to_paradigm[f'{form}_{tag}'] = i
+    return form_msd_to_paradigm
+
+def convert_inflection_file_to_frame(inflection_fname):
+    """
+
+    Args:
+        inflection_fname (str): e.g., "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive_seen.test
+
+    Returns:
+        pd.DataFrame: |source|target|source_msds|target_msds
+    """
+    sources = []
+    targets = []
+    source_msds = []
+    target_msds = []
+    for line in open(inflection_fname):
+        entries = line.split('\t')
+        source = entries[0]
+        target = entries[1]
+        out_start_i = entries[2].index("OUT:") 
+        source_msd = entries[2][2:out_start_i - 1]# -1 to exclude semicolon. Start from 2 to remove X: marker
+        target_msd = entries[2][out_start_i:].strip()
+        sources.append(source)
+        targets.append(target)
+        source_msds.append(source_msd)
+        target_msds.append(target_msd)
+    frame = pd.DataFrame({
+        "source": sources, 
+        "target": targets,
+        "source_msd": map_list( partial(filter_prefix, 'IN'), source_msds), 
+        "target_msd": map_list( partial(filter_prefix, 'OUT'), target_msds) 
+    })
+    return frame
