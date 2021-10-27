@@ -110,9 +110,10 @@ def make_train_dev_seen_unseen_test_files_tl(): # top level
         target_tag = row.target_tag
 
         mc_format_tag = combine_tags(source_tag, target_tag)
-        reinflection_line = f'{strip_accents(row.source_form.strip())}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\n'
+        paradigm_num = row.paradigm
+        reinflection_line = f'{strip_accents(row.source_form.strip())}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\t{paradigm_num}\n'
         line_elems = reinflection_line.split('\t')
-        assert len(line_elems) == 3
+        assert len(line_elems) == 4
         mc_data_file.write(reinflection_line)
     reinflection_frame_fname = 'reinflection_frame_w_root.csv' 
     frame = pd.read_csv(f'results/2021-10-18/{reinflection_frame_fname}')
