@@ -3,7 +3,7 @@ import argparse
 from itertools import combinations, permutations
 from collections import Counter
 
-from packages.utils.gitksan_table_utils import obtain_orthographic_value, obtain_tag, is_empty_entry , combine_tags, get_paradigm_to_counts, obtain_seen_test_frame, stream_all_paradigms, strip_accents, make_reinflection_frame, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, make_covered_test_file, make_train_dev_seen_unseen_test_files
+from packages.utils.gitksan_table_utils import obtain_orthographic_value, obtain_tag, is_empty_entry , combine_tags, get_paradigm_to_counts, stream_all_paradigms, strip_accents, make_reinflection_frame, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, make_covered_test_file, make_train_dev_seen_unseen_test_files, convert_inflection_file_to_frame
 from packages.pkl_operations.pkl_io import store_csv_dynamic
 from packages.visualizations.plot_summary_distributions import plot_character_distribution, plot_feat_distribution, plot_fullness_dist, plot_msd_distribution
 from packages.utils.inspect_paradigm_file import count_num_paradigms_with_multiple_roots
@@ -100,9 +100,10 @@ def plot_num_forms_per_msd():
     for paradigm in paradigms:
         for form, tag in paradigm.stream_form_tag_pairs():
             all_tags.append(tag)
+            all_forms.append(form)
     frame = pd.DataFrame({"form": all_forms, "tag": all_tags})
     print(frame['tag'].value_counts())
-    # plot_msd_distribution(frame)
+    plot_msd_distribution(frame)
 
 def make_train_dev_seen_unseen_test_files_tl(): # top level
     def _write_reinflection_line(mc_data_file, row):
@@ -136,6 +137,25 @@ def make_cross_table_train_dev_seen_unseen_test_files():
     frame = pd.read_csv(f'results/2021-10-18/{reinflection_frame_fname}')
     make_train_dev_seen_unseen_test_files(frame, '_w_root_cross_table', _write_reinflection_line)
 
+def check_unseen_test_files():
+    train_inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive.train"
+    train_frame = convert_inflection_file_to_frame(train_inflection_fname)
+    unseen_inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive_unseen.test"
+    unseen_frame = convert_inflection_file_to_frame(unseen_inflection_fname)
+
+    seen_inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive_seen.test"
+    seen_frame = convert_inflection_file_to_frame(seen_inflection_fname)
+
+    test_inds = set(seen_frame['paradigm_i'].values).union(set(unseen_frame['paradigm_i'].values))
+    unseen_test_inds = set(unseen_frame['paradigm_i'].values)
+    seen_test_inds = set(seen_frame['paradigm_i'].values)
+    train_inds = set(train_frame['paradigm_i'].values)
+    print(unseen_test_inds.intersection(train_inds))
+    print(unseen_test_inds.intersection(seen_test_inds))
+    print(len(unseen_frame))
+    print(len(seen_frame))
+
+
 def main(args):
     if args.make_reinflection_frame_csv:
         make_reinflection_frame_csv(args.include_root)
@@ -157,6 +177,8 @@ def main(args):
         plot_paradigm_fullness_distribution()
     elif args.plot_num_forms_per_msd:
         plot_num_forms_per_msd()
+    elif args.check_unseen_test_files:
+        check_unseen_test_files()
 
 
 if __name__ == "__main__":
@@ -170,6 +192,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--make_covered_test_file', action='store_true')
     parser.add_argument('--diagnose_train_dev_test_files', action='store_true')
+    parser.add_argument('--check_unseen_test_files', action='store_true')
     parser.add_argument('--plot_char_distribution', action='store_true')
     parser.add_argument('--plot_num_forms_per_msd', action='store_true')
     parser.add_argument('--count_num_root_variation_tables', action='store_true')

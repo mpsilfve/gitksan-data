@@ -1,3 +1,4 @@
+import numpy as np
 import unicodedata as ud
 from sklearn.model_selection import train_test_split
 from functools import partial
@@ -31,27 +32,47 @@ def get_paradigm_to_counts(frame):
     paradigm_to_counts = frame['paradigm'].value_counts()
     return paradigm_to_counts.to_dict()
 
-def obtain_seen_test_frame(train_frame, seen_test_fraction=0.1):
-    train_frame = train_frame.sample(frac=1)
-    paradigm_to_counts = get_paradigm_to_counts(train_frame)
-    extracted_inds = set([]) 
-    num_seen_test_samples = int(seen_test_fraction * len(train_frame))
-    num_extracted = 0
-    for row in train_frame.itertuples(): 
-        ind = row[0]
-        paradigm = row.paradigm
-        if ind in extracted_inds or paradigm_to_counts[paradigm] == 1:
-            continue
-        else:
-            extracted_inds.add(ind)
-            paradigm_to_counts[paradigm] -= 1
-            num_extracted += 1
+# TODO: there is a bug here
+# def obtain_seen_test_frame(train_frame, seen_test_fraction=0.1):
+#     train_frame = train_frame.sample(frac=1)
+#     paradigm_to_counts = get_paradigm_to_counts(train_frame)
+#     extracted_inds = set([]) 
+#     num_seen_test_samples = int(seen_test_fraction * len(train_frame))
+#     num_extracted = 0
+#     for row in train_frame.itertuples(): 
+#         ind = row[0] 
+#         paradigm = row.paradigm
+#         if ind in extracted_inds or paradigm_to_counts[paradigm] == 1:
+#             continue
+#         else:
+#             extracted_inds.add(ind)
+#             paradigm_to_counts[paradigm] -= 1
+#             num_extracted += 1  
         
-        if num_extracted == num_seen_test_samples:
-            break
-    seen_test_frame = train_frame.loc[extracted_inds]
-    train_frame_wo_seen_test_frame = train_frame.drop(extracted_inds, axis=0)
-    return train_frame_wo_seen_test_frame, seen_test_frame
+#         if num_extracted == num_seen_test_samples:
+#             break
+#     seen_test_frame = train_frame.loc[extracted_inds]
+#     train_frame_wo_seen_test_frame = train_frame.drop(extracted_inds, axis=0)
+#     return train_frame_wo_seen_test_frame, seen_test_frame
+
+# TODO: need to test
+def obtain_unseen_test_frame(reinflection_frame, unseen_test_fraction=0.1):
+    num_required_unseen_forms = len(reinflection_frame) * unseen_test_fraction
+    paradigms = list(set(reinflection_frame['paradigm'].values))
+    num_forms_extracted = 0
+    paradigms_extracted = []
+
+    while num_forms_extracted < num_required_unseen_forms:
+        rand_paradigm_i = np.random.randint(len(paradigms))
+        sampled_paradigm = paradigms[rand_paradigm_i]
+        paradigm_frame = reinflection_frame[reinflection_frame['paradigm']==sampled_paradigm]
+        paradigms_extracted.append(paradigm_frame)
+        num_forms_extracted += len(paradigm_frame)
+
+    unseen_paradigm_frame = pd.concat(paradigms_extracted)
+    unseen_inds = unseen_paradigm_frame.index.values
+    rest_frame = reinflection_frame.drop(unseen_inds, axis=0)
+    return unseen_paradigm_frame, rest_frame
 
 def get_char_counts(reinflection_frame, form_col_name='source_form'):
     char_counter = Counter()
@@ -233,6 +254,22 @@ def make_covered_test_file(path_fname, test_frame):
     #         gitksan_test_file_covered.write(f'{i_form}\t{tag}')
 
 # TODO: can get rid of dir_suffix; w_root is practically always better.
+# def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
+#     """
+#     Args:
+#         frame (pd.DataFrame): Reinflection frame
+#         dir_suffix (str): w_root
+#         write_reinflection_line ((pd.DataFrame) => str): Converts row in {frame} to a string representing entry in inflection dataset.
+#     """
+#     train_frame, dev_frame, test_frame = obtain_train_dev_test_split(frame)
+#     train_frame, seen_test_frame = obtain_seen_test_frame(train_frame)
+#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.train', train_frame, proc_frame_row)
+#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.dev', dev_frame, proc_frame_row)
+#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', test_frame, proc_frame_row)
+#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame, proc_frame_row)
+#     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', test_frame)
+#     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', test_frame)
+
 def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
     """
     Args:
@@ -240,14 +277,26 @@ def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
         dir_suffix (str): w_root
         write_reinflection_line ((pd.DataFrame) => str): Converts row in {frame} to a string representing entry in inflection dataset.
     """
-    train_frame, dev_frame, test_frame = obtain_train_dev_test_split(frame)
-    train_frame, seen_test_frame = obtain_seen_test_frame(train_frame)
+    unseen_test_frame_ratio = 0.1
+    unseen_test_frame, rest_frame = obtain_unseen_test_frame(frame, unseen_test_frame_ratio) 
+
+    train_frame, dev_frame, test_frame = obtain_train_dev_test_split(rest_frame, 1 - 2/9, 1/9, 1/9)
+    train_paradigms = set(train_frame['paradigm'].values)
+    test_paradigms = set(test_frame['paradigm'].values)
+    non_train_paradigms = test_paradigms.difference(train_paradigms)
+    non_train_paradigm_frame = test_frame[test_frame['paradigm'].isin(non_train_paradigms)]
+    seen_test_frame = test_frame.drop(non_train_paradigm_frame.index.values, axis=0)
+    unseen_test_frame = pd.concat([non_train_paradigm_frame, unseen_test_frame])
+
     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.train', train_frame, proc_frame_row)
     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.dev', dev_frame, proc_frame_row)
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', test_frame, proc_frame_row)
+    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', unseen_test_frame, proc_frame_row)
     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame, proc_frame_row)
-    make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', test_frame)
-    make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', test_frame)
+    make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', unseen_test_frame)
+    make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', seen_test_frame)
+
+    return non_train_paradigms
+
 
 def get_target_to_paradigm_mapping(paradigms):
     """Returns a target to paradigm mapping.
@@ -277,6 +326,7 @@ def convert_inflection_file_to_frame(inflection_fname):
     targets = []
     source_msds = []
     target_msds = []
+    paradigm_inds = []
     for line in open(inflection_fname):
         entries = line.split('\t')
         source = entries[0]
@@ -288,10 +338,21 @@ def convert_inflection_file_to_frame(inflection_fname):
         targets.append(target)
         source_msds.append(source_msd)
         target_msds.append(target_msd)
+        paradigm_ind = entries[-1].strip()
+        paradigm_inds.append(paradigm_ind)
     frame = pd.DataFrame({
         "source": sources, 
         "target": targets,
         "source_msd": map_list( partial(filter_prefix, 'IN'), source_msds), 
-        "target_msd": map_list( partial(filter_prefix, 'OUT'), target_msds) 
+        "target_msd": map_list( partial(filter_prefix, 'OUT'), target_msds),
+        "paradigm_i": paradigm_inds
     })
     return frame
+
+def get_paradigm_inds(inflection_fname):
+    paradigm_inds = []
+    with open(inflection_fname, 'r') as inflection_f:
+        for line in inflection_f:
+            paradigm_i = line.split('\t')[-1]
+            paradigm_inds.append(paradigm_i)
+    return paradigm_inds
