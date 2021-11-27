@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 import os
-from packages.utils.gitksan_table_utils import obtain_orthographic_value, obtain_tag, combine_tags, strip_accents, stream_all_paradigms, make_reinflection_frame, obtain_seen_test_frame, extract_non_empty_paradigms, write_mc_file, make_train_dev_test_files
+from packages.utils.gitksan_table_utils import *
 from packages.utils.paradigm import get_root_orthographic
 from math import factorial
 from functools import partial
@@ -182,6 +182,22 @@ def test_make_train_dev_test_files(reinflection_frame, train_dev_test_file_resou
     #     write_mc_file("random_split" + dir_suffix + "/gitksan_productive.dev", dev_frame)
     #     write_mc_file("random_split" + dir_suffix + "/gitksan_productive.test", test_frame)
     #     make_covered_test_file("random_split" + dir_suffix + "/gitksan-test-covered", test_frame)
+
+def test_convert_inflection_file_to_frame():
+    frame = convert_inflection_file_to_frame('tests/gitksan_productive.train')
+    assert len(frame) == 2847
+    first_row = frame.loc[0]
+    assert first_row.source == "baX-seksdiit_bekwdiit"
+    assert first_row.target == "baX-seksdiit"
+    assert first_row.source_msd == "ROOT;PL;3PL.II"
+    assert first_row.target_msd == "ROOT;PL;3PL.II"
+
+def test_get_target_to_paradigm_mapping():
+    paradigm_fname = "tests/test_whitespace_inflection_tables_gitksan_1.txt"
+    non_empty_paradigms = extract_non_empty_paradigms(paradigm_fname)
+    form_msd_to_paradigm = get_target_to_paradigm_mapping(non_empty_paradigms)
+    print(form_msd_to_paradigm.keys())
+    assert form_msd_to_paradigm["ayook̲_ROOT"] == 0
 
 @pytest.fixture()
 def mc_file_resource():
