@@ -41,9 +41,12 @@ def plot_fullness_dist(paradigms):
     for paradigm in paradigms:
         paradigm_sizes.append(paradigm.count_num_forms())
     sns.histplot(data=paradigm_sizes)
-    plt.xlabel("Number of entries in paradigm")
-    plt.ylabel("Number of paradigms")
-    store_pic_dynamic(plt, 'paradigm_num_forms_hist')
+    plt.xlabel("Number of entries in paradigm", fontsize='large')
+    plt.ylabel("Number of paradigms", fontsize='large')
+    plt.title("Distribution of fullness of paradigms", fontsize='large')
+    plt.tick_params(axis='both', labelsize='large')
+    store_pic_dynamic(plt, 'paradigm_num_forms_hist', 'results', True)
+
 
 def plot_msd_distribution(frame):
     """Plot the frequency with which cells (msds) are filled in the paradigm data
@@ -51,8 +54,10 @@ def plot_msd_distribution(frame):
         frame (pd.DataFrame): |tag|form| 
     """
     sns.histplot(data=frame, x="tag")
-    plt.xlabel("Cell/MSD")
+    plt.title("Frequency of morphosyntactic descriptions (MSDs)", fontsize='large')
+    plt.xlabel("MSD", fontsize='large')
     plt.xticks(rotation=45, ha='right')
-    plt.ylabel("Number of times cell is filled")
+    plt.ylabel("MSD count", fontsize='large')
+    plt.tick_params(axis='both', labelsize='large')
     plt.tight_layout()
-    store_pic_dynamic(plt, 'paradigm_msd_dist')
+    store_pic_dynamic(plt, 'paradigm_msd_dist', 'results', True)

@@ -14,18 +14,9 @@ def reformat(fname, finputname, foutputname):
         open(foutputname, 'w') as foutput:
         for line in f:
             lines = line.strip().split('\t')
-            lemma = lines[0].strip().replace(' ', '_')
-            msd = lines[-2].strip().replace(' ', '_')
-            if len(lines) == 4:
-                form = lines[1].strip().replace(' ', '_')
-            elif len(lines) == 2: # for covered files?
-                form = '-'
-            else:
-                print('Please make sure each line in your file is a tab separated 3-column entry.')
-            pos = msd.split(';')[0]
-            if '.' in pos:
-                pos = pos.split('.')[0]
-            #input = [letter for letter in lemma] + [pos, 'CANONICAL'] + ['#'] + [tag for tag in msd.split(';')]
+            lemma = lines[0].strip()
+            form = lines[1].strip()
+            msd = lines[2].strip()
             input = [letter for letter in lemma] + [tag for tag in msd.split(';')[1:]] # NOTE: I don't include POS (position 0 in msd) for Gitksan. Should be changed for other languages.
             output = [letter for letter in form]
             finput.write(' '.join(input) + '\n')
