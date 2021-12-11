@@ -2,15 +2,15 @@
 #SBATCH --account=def-msilfver
 #SBATCH --gres=gpu:1
 #SBATCH --mem=5G
-#SBATCH --time 00:30:00
+#SBATCH --time 04:00:00
 #SBATCH --job-name=TransformerRandinitTrain
 #SBATCH --output=/scratch/fsamir8/finetune_randinit/gitksan.out
 #SBATCH --error=/scratch/fsamir8/finetune_randinit/gitksan.error
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/NVIDIA/cuda-9.0/lib64
 export CUDA_VISIBLE_DEVICES=0
-PREPROCESS=/project/rrg-msilfver/fsamir8/gitksan-data/results
-SAVEPREF=/scratch/fsamir8/finetune_randinit
+PREPROCESS=/project/rrg-msilfver/fsamir8/gitksan-data/results/1_source
+SAVEPREF=/scratch/fsamir8/finetune_randinit/1_source
 
 cd /project/rrg-msilfver/fsamir8
 source py3env/bin/activate
