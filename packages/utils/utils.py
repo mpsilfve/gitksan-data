@@ -1,2 +1,2 @@
-def map_list(l, f):
-    return list(map(l, f))
+def map_list(f, l):
+    return list(map(f, l))

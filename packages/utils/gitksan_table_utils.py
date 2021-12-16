@@ -8,6 +8,7 @@ from itertools import combinations, permutations
 from .paradigm import *
 from .utils import map_list 
 
+np.random.seed(0)
 
 def is_empty_entry(entry):
     return "\t_\t_\t_\t_" in entry
@@ -63,7 +64,7 @@ def obtain_unseen_test_frame(reinflection_frame, unseen_test_fraction=0.1):
     paradigms_extracted = []
 
     while num_forms_extracted < num_required_unseen_forms:
-        rand_paradigm_i = np.random.randint(len(paradigms))
+        rand_paradigm_i = np.random.randint(len(paradigms), )
         sampled_paradigm = paradigms[rand_paradigm_i]
         paradigm_frame = reinflection_frame[reinflection_frame['paradigm']==sampled_paradigm]
         paradigms_extracted.append(paradigm_frame)
@@ -226,7 +227,7 @@ def make_train_dev_test_files(frame, dir_suffix, obtain_tdt_split):
 
 def obtain_train_dev_test_split(frame, train_ratio=0.8, dev_ratio=0.1, test_ratio=0.1):
     x_train, x_test = train_test_split(frame, test_size=1 - train_ratio, random_state=0)
-    x_val, x_test = train_test_split(x_test, test_size=test_ratio/(test_ratio + dev_ratio), shuffle=False)
+    x_val, x_test = train_test_split(x_test, test_size=test_ratio/(test_ratio + dev_ratio), shuffle=False, random_state=0)
     return x_train, x_val, x_test
 
 def make_covered_test_file(path_fname, test_frame):
