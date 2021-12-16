@@ -64,7 +64,7 @@ def obtain_unseen_test_frame(reinflection_frame, unseen_test_fraction=0.1):
     paradigms_extracted = []
 
     while num_forms_extracted < num_required_unseen_forms:
-        rand_paradigm_i = np.random.randint(len(paradigms))
+        rand_paradigm_i = np.random.randint(len(paradigms), )
         sampled_paradigm = paradigms[rand_paradigm_i]
         paradigm_frame = reinflection_frame[reinflection_frame['paradigm']==sampled_paradigm]
         paradigms_extracted.append(paradigm_frame)

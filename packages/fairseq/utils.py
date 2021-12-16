@@ -29,6 +29,7 @@ def extract_hypotheses(fs_prediction_fname, num_hypotheses):
                 if i == 0: # NOTE: can adjust this later to get more predictions
                     prediction_confidence_line = prediction_f.readline()
                     prediction_split = prediction_confidence_line.split('\t')
+                    # print(prediction_split)
                     prediction = ''.join(prediction_split[2].split(' ')).strip()
                     confidence = float(prediction_split[1])
                     predictions.append(prediction)
@@ -59,7 +60,6 @@ def extract_hypotheses_mbr(fs_prediction_fname, num_hypotheses):
     with open(fs_prediction_fname) as prediction_f:
         line = prediction_f.readline()
         while line != '':
-            print(line)
             ##### processing a block
             prediction_f.readline() # skip timing line. 
             source_predictions = []
