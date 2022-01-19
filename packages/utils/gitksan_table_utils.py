@@ -1,5 +1,4 @@
 import numpy as np
-import unicodedata as ud
 from sklearn.model_selection import train_test_split
 from functools import partial
 import pandas as pd
@@ -92,37 +91,6 @@ def get_tag_feat_counts(reinflection_frame, form_col_name='source_tag'):
     source_form_series.apply(lambda tag: [update_counter(feat) for feat in tag.split(';')])
     return tag_feat_counter
 
-def strip_accents(s):
-    """Replace x̲ with X
-               k̲ with K
-               g̲ with G
-
-    Important for application of the MNC tool, which doesn't handle diacritics well.
-
-    Args:
-        s (str): Gitksan word
-
-    Returns:
-        [str]: String with diacritics substituted for capitals.
-    """
-    clean_s = ""
-    # return ''.join(c for c in unicodedata.normalize('NFD', s)
-    #                 if unicodedata.category(c) != 'Mn')
-    i = 0
-    while i < len(s):
-        ud_name_cur = ud.name(s[i])
-        if ud_name_cur in ["latin small letter k".upper(), "latin small letter g".upper(), "latin small letter x".upper()]:
-            if (i+1) < len(s):
-                ud_name_next = ud.name(s[i+1])
-                if ud_name_next == "combining low line".upper():
-                    clean_s += s[i].upper() # replace diacritic with uppercase
-                else:
-                    clean_s += s[i] # k, g, x
-        else:
-            if ud_name_cur != "combining low line".upper():
-                clean_s += s[i] # all other characters (e.g., letters and apostrophes)
-        i += 1
-    return clean_s
 
 def stream_all_paradigms(fname):
     with open(fname, 'r') as gp_f:
@@ -195,6 +163,30 @@ def make_reinflection_frame(paradigms, include_root):
     })
     return paradigm_frame 
 
+def filter_paradigms(paradigms):
+    """
+
+    Args:
+        paradigms ([Paradigm]): List of paradigms
+    
+    Returns:
+        [pd.DataFrame]: Array of DataFrames
+    """
+    pass_paradigms = []
+    for paradigm in paradigms:
+        num_roots = paradigm.count_num_roots()
+        if num_roots >= 1:
+            num_forms = paradigm.count_num_forms()
+            if num_forms >= 1:
+                pass_paradigms.append(paradigm.to_dataframe())
+    return pass_paradigms
+
+def select_among_duplicate_entries(paradigms):
+    for paradigm in paradigms:
+        if paradigm.has_dup_entries():
+            # TODO: fill in
+            pass
+
 def extract_non_empty_paradigms(paradigm_fname):
     num_paradigms = 0
     non_empty_paradigms = []
@@ -240,40 +232,12 @@ def make_covered_test_file(path_fname, test_frame):
     with open(f'data/spreadsheets/{path_fname}', 'w') as test_covered_f:
         test_frame.apply(partial(_write_test_covered_line, test_covered_f), axis=1)
 
-    # inputs = []
-    # tags = []
-    # with open("data/spreadsheets/gitksan_productive.test", 'r') as gitksan_test_file:
-    #     for line in gitksan_test_file:
-    #         i_form, o_form, tag = line.split('\t') 
-    #         inputs.append(i_form)
-    #         tags.append(tag)
-    # with open('data/spreadsheets/gitksan_productive_covered.test', 'w') as gitksan_test_file_covered:
-    #     for i in range(len(inputs)):
-    #         i_form = inputs[i]
-    #         tag = tags[i]
-    #         gitksan_test_file_covered.write(f'{i_form}\t{tag}')
-
-# TODO: can get rid of dir_suffix; w_root is practically always better.
-# def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
-#     """
-#     Args:
-#         frame (pd.DataFrame): Reinflection frame
-#         dir_suffix (str): w_root
-#         write_reinflection_line ((pd.DataFrame) => str): Converts row in {frame} to a string representing entry in inflection dataset.
-#     """
-#     train_frame, dev_frame, test_frame = obtain_train_dev_test_split(frame)
-#     train_frame, seen_test_frame = obtain_seen_test_frame(train_frame)
-#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.train', train_frame, proc_frame_row)
-#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.dev', dev_frame, proc_frame_row)
-#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', test_frame, proc_frame_row)
-#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame, proc_frame_row)
-#     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', test_frame)
-#     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', test_frame)
-
+# TODO: need to rewrite this function...
+    # the frame should be 
 def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
     """
     Args:
-        frame (pd.DataFrame): Reinflection frame
+        frame (pd.DataFrame): |word|tag|paradigm_i|
         dir_suffix (str): w_root
         write_reinflection_line ((pd.DataFrame) => str): Converts row in {frame} to a string representing entry in inflection dataset.
     """
@@ -296,7 +260,6 @@ def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', seen_test_frame)
 
     return non_train_paradigms
-
 
 def get_target_to_paradigm_mapping(paradigms):
     """Returns a target to paradigm mapping.

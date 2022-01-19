@@ -6,7 +6,7 @@ from collections import Counter
 from packages.utils.gitksan_table_utils import obtain_orthographic_value, obtain_tag, is_empty_entry , combine_tags, get_paradigm_to_counts, stream_all_paradigms, strip_accents, make_reinflection_frame, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, make_covered_test_file, make_train_dev_seen_unseen_test_files, convert_inflection_file_to_frame
 from packages.pkl_operations.pkl_io import store_csv_dynamic
 from packages.visualizations.plot_summary_distributions import plot_character_distribution, plot_feat_distribution, plot_fullness_dist, plot_msd_distribution
-from packages.utils.inspect_paradigm_file import count_num_paradigms_with_multiple_roots
+from packages.utils.inspect_paradigm_file import inspect_root_distribution
 from packages.augmentation.cross_table import create_cross_table_reinflection_frame
 
 
@@ -172,7 +172,7 @@ def main(args):
     elif args.plot_char_distribution:
         plot_char_distribution()
     elif args.count_num_root_variation_tables:
-        count_num_paradigms_with_multiple_roots()
+        inspect_root_distribution()
     elif args.plot_paradigm_fullness_distribution:
         plot_paradigm_fullness_distribution()
     elif args.plot_num_forms_per_msd:
