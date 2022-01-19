@@ -1,4 +1,5 @@
 from collections import defaultdict
+from packages.utils.constants import *
 from numpy.random import randint
 def select_cross_paradigm(target_paradigm, all_paradigms, p_dist_func):
     """
@@ -24,16 +25,21 @@ def select_rand_cross_paradigm(target_msd, target_paradigm_i, all_paradigms_w_ms
     Returns:
         (str): {target_msd} form from a randomly selected paradigm.
     """
+    # TODO: change this to return ''.
     num_paradigms = len(all_paradigms_w_msd)
     assert num_paradigms > 0, f"there are 0 paradigms with {target_msd}"
-    # assert num_paradigms != 1, f"the target msd {target_msd} only has a single filled cell."
-    rand_p_ind = randint(0, num_paradigms)
-    selected_p = all_paradigms_w_msd[rand_p_ind]
-    # NOTE: see discussion in 2021-10-08 report for why this is commented out. 
-    # while selected_p.paradigm_index == target_paradigm_i:
-    #     rand_p_ind = randint(0, num_paradigms)
-    #     selected_p = all_paradigms_w_msd[rand_p_ind]
-    return selected_p[target_msd], selected_p.paradigm_index
+    if num_paradigms == 1:
+        return NAN_CROSS_SYMB, NAN_CROSS_IND
+    else:
+        rand_p_ind = randint(0, num_paradigms)
+        selected_p = all_paradigms_w_msd[rand_p_ind]
+
+        # NOTE: see discussion in 2021-10-08 report for why this is commented out. 
+            # NOTE: it's since been commented back in -- cannot use the same table as the cross-table (leaks information)
+        while selected_p.paradigm_index == target_paradigm_i:
+            rand_p_ind = randint(0, num_paradigms)
+            selected_p = all_paradigms_w_msd[rand_p_ind]
+        return selected_p[target_msd], selected_p.paradigm_index
 
 def create_cross_table_reinflection_frame(reinflection_frame, all_paradigms):
     """Create reinflection frame with sources from a randomly selected cross-table.

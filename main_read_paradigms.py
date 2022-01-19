@@ -129,12 +129,13 @@ def make_cross_table_train_dev_seen_unseen_test_files():
         paradigm_num = row.paradigm
         cross_table_paradigm_num = row.cross_table_i
 
+        print(row)
         reinflection_line = f'{strip_accents(row.source_form.strip())}_{strip_accents(row.cross_table_src)}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\t{paradigm_num}_{cross_table_paradigm_num}\n'
         line_elems = reinflection_line.split('\t')
         assert len(line_elems) == 4
         mc_data_file.write(reinflection_line)
     reinflection_frame_fname = 'cross_table_reinflection_frame.csv' 
-    frame = pd.read_csv(f'results/2021-10-18/{reinflection_frame_fname}')
+    frame = pd.read_csv(f'results/2021-11-22/{reinflection_frame_fname}')
     make_train_dev_seen_unseen_test_files(frame, '_w_root_cross_table', _write_reinflection_line)
 
 def check_unseen_test_files():
