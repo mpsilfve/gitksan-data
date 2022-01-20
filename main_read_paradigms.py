@@ -3,7 +3,7 @@ import argparse
 from itertools import combinations, permutations
 from collections import Counter
 
-from packages.utils.gitksan_table_utils import obtain_orthographic_value, obtain_tag, is_empty_entry , combine_tags, get_paradigm_to_counts, stream_all_paradigms, strip_accents, make_reinflection_frame, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, make_covered_test_file, make_train_dev_seen_unseen_test_files, convert_inflection_file_to_frame
+from packages.utils.gitksan_table_utils import filter_paradigms, obtain_orthographic_value, obtain_paradigm_frames, obtain_tag, is_empty_entry , combine_tags, get_paradigm_to_counts, stream_all_paradigms, strip_accents, make_reinflection_frame, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, make_train_dev_seen_unseen_test_files, convert_inflection_file_to_frame
 from packages.pkl_operations.pkl_io import store_csv_dynamic
 from packages.visualizations.plot_summary_distributions import plot_character_distribution, plot_feat_distribution, plot_fullness_dist, plot_msd_distribution
 from packages.utils.inspect_paradigm_file import inspect_root_distribution
@@ -12,7 +12,6 @@ from packages.augmentation.cross_table import create_cross_table_reinflection_fr
 
 def count_num_forms(paradigms):
     return sum([paradigm.count_num_forms() for paradigm in paradigms])
-
 
 def read_reinflection_file_into_frame(fname):
     source_forms = []
@@ -81,14 +80,6 @@ def make_reinflection_frame_csv(include_root):
     include_root_suffix = "_w_root" if include_root else ""
     store_csv_dynamic(paradigm_frame, "reinflection_frame" + include_root_suffix)
 
-def make_cross_table_reinflection_frame_csv():
-    fname = "whitespace-inflection-tables-gitksan-productive.txt"
-    paradigms = extract_non_empty_paradigms(fname)
-    reinflection_frame = pd.read_csv(f'results/2021-10-18/reinflection_frame_w_root.csv')
-    cross_table_frame = create_cross_table_reinflection_frame(reinflection_frame, paradigms)
-    store_csv_dynamic(cross_table_frame, "cross_table_reinflection_frame")
-
-
 def plot_paradigm_fullness_distribution():
     plot_fullness_dist(extract_non_empty_paradigms("whitespace-inflection-tables-gitksan-productive.txt"))
 
@@ -105,38 +96,17 @@ def plot_num_forms_per_msd():
     print(frame['tag'].value_counts())
     plot_msd_distribution(frame)
 
-def make_train_dev_seen_unseen_test_files_tl(): # top level
-    def _write_reinflection_line(mc_data_file, row):
-        source_tag = row.source_tag
-        target_tag = row.target_tag
-
-        mc_format_tag = combine_tags(source_tag, target_tag)
-        paradigm_num = row.paradigm
-        reinflection_line = f'{strip_accents(row.source_form.strip())}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\t{paradigm_num}\n'
-        line_elems = reinflection_line.split('\t')
-        assert len(line_elems) == 4
-        mc_data_file.write(reinflection_line)
-    reinflection_frame_fname = 'reinflection_frame_w_root.csv' 
-    frame = pd.read_csv(f'results/2021-10-18/{reinflection_frame_fname}')
-    make_train_dev_seen_unseen_test_files(frame, '_w_root', _write_reinflection_line)
-
-def make_cross_table_train_dev_seen_unseen_test_files():
-    def _write_reinflection_line(mc_data_file, row):
-        source_tag = row.source_tag
-        target_tag = row.target_tag
-
-        mc_format_tag = combine_tags(source_tag, target_tag)
-        paradigm_num = row.paradigm
-        cross_table_paradigm_num = row.cross_table_i
-
-        print(row)
-        reinflection_line = f'{strip_accents(row.source_form.strip())}_{strip_accents(row.cross_table_src)}\t{strip_accents(row.target_form.strip())}\t{mc_format_tag}\t{paradigm_num}_{cross_table_paradigm_num}\n'
-        line_elems = reinflection_line.split('\t')
-        assert len(line_elems) == 4
-        mc_data_file.write(reinflection_line)
-    reinflection_frame_fname = 'cross_table_reinflection_frame.csv' 
-    frame = pd.read_csv(f'results/2021-11-22/{reinflection_frame_fname}')
-    make_train_dev_seen_unseen_test_files(frame, '_w_root_cross_table', _write_reinflection_line)
+def make_train_dev_test_split(): # top level
+    """See https://glacier-impatiens-3c9.notion.site/Dataset-construction-dd569deb5ddd43349b1498703b51a6da
+    under "Construction" heading for a description of this process.
+    """
+    all_paradigms = []
+    for paradigm in stream_all_paradigms('whitespace-inflection-tables-gitksan-productive.txt'):
+        all_paradigms.append(paradigm)
+    filtered_paradigms = filter_paradigms(all_paradigms)
+    condensed_paradigms = obtain_paradigm_frames(filtered_paradigms)
+    all_paradigms_frame = pd.concat(condensed_paradigms)
+    store_csv_dynamic(all_paradigms_frame, "condensed_paradigms.csv")
 
 def check_unseen_test_files():
     train_inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive.train"
@@ -157,19 +127,14 @@ def check_unseen_test_files():
     print(len(seen_frame))
 
 
+
 def main(args):
     if args.make_reinflection_frame_csv:
         make_reinflection_frame_csv(args.include_root)
-    elif args.make_cross_table_reinflection_frame_csv:
-        make_cross_table_reinflection_frame_csv()
-    elif args.make_train_dev_seen_unseen_test_files: 
-        make_train_dev_seen_unseen_test_files_tl()
-    elif args.make_cross_table_train_dev_seen_unseen_test_files: 
-        make_cross_table_train_dev_seen_unseen_test_files()
+    elif args.make_train_dev_test_split: 
+        make_train_dev_test_split()
     elif args.diagnose_train_dev_test_files:
         diagnose_train_dev_test_files()
-    elif args.make_covered_test_file:
-        make_covered_test_file()
     elif args.plot_char_distribution:
         plot_char_distribution()
     elif args.count_num_root_variation_tables:
@@ -181,14 +146,13 @@ def main(args):
     elif args.check_unseen_test_files:
         check_unseen_test_files()
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--make_reinflection_frame_csv', action='store_true')
     parser.add_argument('--make_cross_table_reinflection_frame_csv', action='store_true')
     parser.add_argument('--include_root', action='store_true')
 
-    parser.add_argument('--make_train_dev_seen_unseen_test_files', action='store_true')
+    parser.add_argument('--make_train_dev_test_split', action='store_true')
     parser.add_argument('--make_cross_table_train_dev_seen_unseen_test_files', action='store_true')
 
     parser.add_argument('--make_covered_test_file', action='store_true')
