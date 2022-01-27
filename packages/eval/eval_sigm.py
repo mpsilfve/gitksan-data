@@ -12,12 +12,12 @@ import codecs
 def distance(str1, str2):
     """Simple Levenshtein implementation for evalm."""
     m = np.zeros([len(str2)+1, len(str1)+1])
-    for x in xrange(1, len(str2) + 1):
+    for x in range(1, len(str2) + 1):
         m[x][0] = m[x-1][0] + 1
-    for y in xrange(1, len(str1) + 1):
+    for y in range(1, len(str1) + 1):
         m[0][y] = m[0][y-1] + 1
-    for x in xrange(1, len(str2) + 1):
-        for y in xrange(1, len(str1) + 1):
+    for x in range(1, len(str2) + 1):
+        for y in range(1, len(str1) + 1):
             if str1[y-1] == str2[x-1]:
                 dg = 0
             else:
@@ -80,21 +80,21 @@ def eval_paradigm(gold, guess):
                 break
     return round(correct/total*100, 2)
                 
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description='CoNLL-SIGMORPHON 2017 Shared Task Evaluation')
-    parser.add_argument("--gold", help="Gold standard (uncovered)", required=True, type=str)
-    parser.add_argument("--gold_input", help="Gold input (covered)", required=False, type=str)
-    parser.add_argument("--guess", help="Model output", required=True, type=str)
-    parser.add_argument("--task", help="Task 1 or Task 2", required=True, choices=[1, 2], type=int)
-    args = parser.parse_args()    
+# if __name__ == "__main__":
+#     import argparse
+#     parser = argparse.ArgumentParser(description='CoNLL-SIGMORPHON 2017 Shared Task Evaluation')
+#     parser.add_argument("--gold", help="Gold standard (uncovered)", required=True, type=str)
+#     parser.add_argument("--gold_input", help="Gold input (covered)", required=False, type=str)
+#     parser.add_argument("--guess", help="Model output", required=True, type=str)
+#     parser.add_argument("--task", help="Task 1 or Task 2", required=True, choices=[1, 2], type=int)
+#     args = parser.parse_args()    
 
-    D_gold = read(args.gold)
-    D_guess = read(args.guess)
+#     D_gold = read(args.gold)
+#     D_guess = read(args.guess)
 
-    if args.task == 1:
-        print "acccuracy:\t{0:.2f}\nlevenshtein:\t{1:.2f}".format(*eval_form(D_gold, D_guess))
-    else:
-        assert args.gold_input is not None
-        ignore = read_input(args.gold_input)
-        print "accuracy:\t{0:.2f}\nlevenshtein:\t{1:.2f}\nparadigm:\t{2:.2f}".format(*eval_form(D_gold, D_guess, ignore=ignore)+(eval_paradigm(D_gold, D_guess),))
+#     if args.task == 1:
+#         print f"acccuracy:\t{0:.2f}\nlevenshtein:\t{1:.2f}".format(*eval_form(D_gold, D_guess))
+#     else:
+#         assert args.gold_input is not None
+#         ignore = read_input(args.gold_input)
+#         print "accuracy:\t{0:.2f}\nlevenshtein:\t{1:.2f}\nparadigm:\t{2:.2f}".format(*eval_form(D_gold, D_guess, ignore=ignore)+(eval_paradigm(D_gold, D_guess),))

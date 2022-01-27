@@ -1,10 +1,14 @@
+import math
 import pandas as pd
 import argparse
 from itertools import combinations, permutations
 from collections import Counter
+from packages.utils.create_data_splits import make_all_pairs_frame
 
 from packages.utils.gitksan_table_utils import filter_paradigms, obtain_orthographic_value, obtain_paradigm_frames, obtain_tag, is_empty_entry , combine_tags, get_paradigm_to_counts, stream_all_paradigms, strip_accents, make_reinflection_frame, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, make_train_dev_seen_unseen_test_files, convert_inflection_file_to_frame
+from packages.utils.create_data_splits import *
 from packages.pkl_operations.pkl_io import store_csv_dynamic
+from packages.utils.constants import *
 from packages.visualizations.plot_summary_distributions import plot_character_distribution, plot_feat_distribution, plot_fullness_dist, plot_msd_distribution
 from packages.utils.inspect_paradigm_file import inspect_root_distribution
 from packages.augmentation.cross_table import create_cross_table_reinflection_frame
@@ -96,7 +100,22 @@ def plot_num_forms_per_msd():
     print(frame['tag'].value_counts())
     plot_msd_distribution(frame)
 
-def make_train_dev_test_split(): # top level
+def make_train_dev_test_split():
+    """Make word-level train/dev/challenge_test/standard_test splits.
+
+    Stored under data/spreadsheets/standard_challenge_split
+    """
+    all_paradigms_frame = pd.read_csv("data/spreadsheets/standard_challenge_split/condensed_paradigms.csv", usecols=list(range(1,7)))
+    challenge_test_frame_fraction = 0.1
+    challenge_test_frame_size = math.ceil(challenge_test_frame_fraction * len(all_paradigms_frame))
+    challenge_test_frame, rest_frame = divide_challenge_rest_frame(all_paradigms_frame, challenge_test_frame_size)
+    train_frame, dev_frame, standard_test_frame = create_train_dev_test_split(rest_frame, challenge_test_frame_fraction) 
+    store_csv_dynamic(challenge_test_frame, 'challenge_test_frame', "data/spreadsheets/standard_challenge_split")
+    store_csv_dynamic(train_frame, 'train_frame', "data/spreadsheets/standard_challenge_split")
+    store_csv_dynamic(dev_frame, 'dev_frame', "data/spreadsheets/standard_challenge_split")
+    store_csv_dynamic(standard_test_frame, 'standard_test_frame', "data/spreadsheets/standard_challenge_split")
+
+def make_condensed_paradigms_spreadsheet(): # top level
     """See https://glacier-impatiens-3c9.notion.site/Dataset-construction-dd569deb5ddd43349b1498703b51a6da
     under "Construction" heading for a description of this process.
     """
@@ -106,7 +125,7 @@ def make_train_dev_test_split(): # top level
     filtered_paradigms = filter_paradigms(all_paradigms)
     condensed_paradigms = obtain_paradigm_frames(filtered_paradigms)
     all_paradigms_frame = pd.concat(condensed_paradigms)
-    store_csv_dynamic(all_paradigms_frame, "condensed_paradigms.csv")
+    store_csv_dynamic(all_paradigms_frame, "condensed_paradigms.csv", "data/spreadsheets/standard_challenge_split")
 
 def check_unseen_test_files():
     train_inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive.train"
@@ -126,11 +145,16 @@ def check_unseen_test_files():
     print(len(unseen_frame))
     print(len(seen_frame))
 
+def make_all_pairs_dataset():
+    train_frame = pd.read_csv(f"{STD_CHL_SPLIT_PATH}/type_split/train_frame.csv")
+    train_dataset = make_all_pairs_frame(train_frame, train_frame) 
 
 
 def main(args):
     if args.make_reinflection_frame_csv:
         make_reinflection_frame_csv(args.include_root)
+    elif args.make_condensed_paradigms_spreadsheet: 
+        make_condensed_paradigms_spreadsheet()
     elif args.make_train_dev_test_split: 
         make_train_dev_test_split()
     elif args.diagnose_train_dev_test_files:
@@ -145,6 +169,13 @@ def main(args):
         plot_num_forms_per_msd()
     elif args.check_unseen_test_files:
         check_unseen_test_files()
+    elif args.make_cartesian_product_source_files:
+        make_cartesian_product_source_files()
+    elif args.make_random_source:
+        make_random_source_files()
+
+
+        
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -153,6 +184,7 @@ if __name__ == "__main__":
     parser.add_argument('--include_root', action='store_true')
 
     parser.add_argument('--make_train_dev_test_split', action='store_true')
+    parser.add_argument('--make_condensed_paradigms_spreadsheet', action='store_true')
     parser.add_argument('--make_cross_table_train_dev_seen_unseen_test_files', action='store_true')
 
     parser.add_argument('--make_covered_test_file', action='store_true')
