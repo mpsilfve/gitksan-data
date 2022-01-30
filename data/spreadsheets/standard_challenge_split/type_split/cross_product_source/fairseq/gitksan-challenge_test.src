@@ -1,0 +1,232 @@
+w o K ' IN:ROOT OUT:ROOT OUT:3.II
+w o K ' IN:ROOT OUT:ROOT OUT:3PL.II
+w o K ' t IN:ROOT IN:3.II OUT:ROOT
+w o K ' t IN:ROOT IN:3.II OUT:ROOT OUT:3PL.II
+w o K ' d i i t IN:ROOT IN:3PL.II OUT:ROOT
+w o K ' d i i t IN:ROOT IN:3PL.II OUT:ROOT OUT:3.II
+t s ' e p IN:ROOT OUT:ROOT OUT:ATTR
+t s ' e p IN:ROOT OUT:ROOT OUT:3.II
+t s ' e p IN:ROOT OUT:ROOT OUT:3PL.II
+t s ' e b i m IN:ROOT IN:ATTR OUT:ROOT
+t s ' e b i m IN:ROOT IN:ATTR OUT:ROOT OUT:3.II
+t s ' e b i m IN:ROOT IN:ATTR OUT:ROOT OUT:3PL.II
+t s ' e p t IN:ROOT IN:3.II OUT:ROOT
+t s ' e p t IN:ROOT IN:3.II OUT:ROOT OUT:ATTR
+t s ' e p t IN:ROOT IN:3.II OUT:ROOT OUT:3PL.II
+t s ' e p d i i t IN:ROOT IN:3PL.II OUT:ROOT
+t s ' e p d i i t IN:ROOT IN:3PL.II OUT:ROOT OUT:ATTR
+t s ' e p d i i t IN:ROOT IN:3PL.II OUT:ROOT OUT:3.II
+h l i b u u IN:ROOT OUT:ROOT OUT:3.II
+h l i b u u t IN:ROOT IN:3.II OUT:ROOT
+g w e l g w a X IN:ROOT OUT:ROOT OUT:1PL.II
+g w e l g w a X a ' m IN:ROOT IN:1PL.II OUT:ROOT
+s i l i m IN:ROOT OUT:ROOT OUT:3PL.II
+s i l i m x d i i t IN:ROOT IN:3PL.II OUT:ROOT
+K ' o o ' l t IN:ROOT OUT:ROOT OUT:SX
+K ' o o ' l d i t IN:ROOT IN:SX OUT:ROOT
+d e w IN:ROOT OUT:ROOT OUT:PL
+d e w IN:ROOT OUT:ROOT OUT:3.II
+d e w d e w IN:ROOT IN:PL OUT:ROOT
+d e w d e w IN:ROOT IN:PL OUT:ROOT OUT:3.II
+d a w t IN:ROOT IN:3.II OUT:ROOT
+d a w t IN:ROOT IN:3.II OUT:ROOT OUT:PL
+s i m i h l IN:ROOT OUT:ROOT OUT:3PL.II
+s i m i h l d i i t IN:ROOT IN:3PL.II OUT:ROOT
+h a n a K ' IN:ROOT OUT:ROOT OUT:PL
+h a n a K ' IN:ROOT OUT:ROOT OUT:3.II
+h a n a K ' IN:ROOT OUT:ROOT OUT:1SG.II
+h a a n a K ' IN:ROOT IN:PL OUT:ROOT
+h a a n a K ' IN:ROOT IN:PL OUT:ROOT OUT:3.II
+h a a n a K ' IN:ROOT IN:PL OUT:ROOT OUT:1SG.II
+h a n a K ' t IN:ROOT IN:3.II OUT:ROOT
+h a n a K ' t IN:ROOT IN:3.II OUT:ROOT OUT:PL
+h a n a K ' t IN:ROOT IN:3.II OUT:ROOT OUT:1SG.II
+h a n a K ' a ' y IN:ROOT IN:1SG.II OUT:ROOT
+h a n a K ' a ' y IN:ROOT IN:1SG.II OUT:ROOT OUT:PL
+h a n a K ' a ' y IN:ROOT IN:1SG.II OUT:ROOT OUT:3.II
+n i y e ' e IN:ROOT OUT:ROOT OUT:3.II
+n i y e ' e IN:ROOT OUT:ROOT OUT:1SG.II
+n i y e ' e t IN:ROOT IN:3.II OUT:ROOT
+n i y e ' e t IN:ROOT IN:3.II OUT:ROOT OUT:1SG.II
+n i y e ' e ' y IN:ROOT IN:1SG.II OUT:ROOT
+n i y e ' e ' y IN:ROOT IN:1SG.II OUT:ROOT OUT:3.II
+n o o K IN:ROOT OUT:ROOT OUT:1SG.II
+n o o G a ' y IN:ROOT IN:1SG.II OUT:ROOT
+s d i n IN:ROOT OUT:ROOT OUT:3.II
+s d i n t IN:ROOT IN:3.II OUT:ROOT
+t X o ' o IN:ROOT OUT:ROOT OUT:3PL.II
+t X o ' o d i i t IN:ROOT IN:3PL.II OUT:ROOT
+t s ' a t x w IN:ROOT OUT:ROOT OUT:3.II
+t s ' a t x w IN:ROOT OUT:ROOT OUT:3.II
+t s ' a t x w t IN:ROOT IN:3.II OUT:ROOT
+t s ' a t x w t IN:ROOT IN:3.II OUT:ROOT
+t s ' a t x w IN:ROOT OUT:ROOT OUT:3.II
+t s ' a t x w IN:ROOT OUT:ROOT OUT:3.II
+t s ' a t x w t IN:ROOT IN:3.II OUT:ROOT
+t s ' a t x w t IN:ROOT IN:3.II OUT:ROOT
+d a s IN:ROOT OUT:ROOT OUT:3.II
+d a s IN:ROOT OUT:ROOT OUT:3PL.II
+d a s t IN:ROOT IN:3.II OUT:ROOT
+d a s t IN:ROOT IN:3.II OUT:ROOT OUT:3PL.II
+d e s d i i t IN:ROOT IN:3PL.II OUT:ROOT
+d e s d i i t IN:ROOT IN:3PL.II OUT:ROOT OUT:3.II
+h l o X s IN:ROOT OUT:ROOT OUT:ATTR
+h l o X s IN:ROOT OUT:ROOT OUT:3.II
+h l o X s IN:ROOT OUT:ROOT OUT:ATTR
+h l o X s IN:ROOT OUT:ROOT OUT:3.II
+h l o X s a IN:ROOT IN:ATTR OUT:ROOT
+h l o X s a IN:ROOT IN:ATTR OUT:ROOT OUT:3.II
+h l o X s a IN:ROOT IN:ATTR OUT:ROOT
+h l o X s a IN:ROOT IN:ATTR OUT:ROOT OUT:3.II
+h l o X s t IN:ROOT IN:3.II OUT:ROOT
+h l o X s t IN:ROOT IN:3.II OUT:ROOT OUT:ATTR
+h l o X s t IN:ROOT IN:3.II OUT:ROOT
+h l o X s t IN:ROOT IN:3.II OUT:ROOT OUT:ATTR
+h l o X s IN:ROOT OUT:ROOT OUT:ATTR
+h l o X s IN:ROOT OUT:ROOT OUT:3.II
+h l o X s IN:ROOT OUT:ROOT OUT:ATTR
+h l o X s IN:ROOT OUT:ROOT OUT:3.II
+h l o X s a IN:ROOT IN:ATTR OUT:ROOT
+h l o X s a IN:ROOT IN:ATTR OUT:ROOT OUT:3.II
+h l o X s a IN:ROOT IN:ATTR OUT:ROOT
+h l o X s a IN:ROOT IN:ATTR OUT:ROOT OUT:3.II
+h l o X s t IN:ROOT IN:3.II OUT:ROOT
+h l o X s t IN:ROOT IN:3.II OUT:ROOT OUT:ATTR
+h l o X s t IN:ROOT IN:3.II OUT:ROOT
+h l o X s t IN:ROOT IN:3.II OUT:ROOT OUT:ATTR
+s i n h u n IN:ROOT OUT:ROOT OUT:SX
+s i n h u n IN:ROOT OUT:ROOT OUT:3.II
+s i n h u n t IN:ROOT IN:SX OUT:ROOT
+s i n h u n t IN:ROOT IN:SX OUT:ROOT OUT:3.II
+s i n h u n t IN:ROOT IN:3.II OUT:ROOT
+s i n h u n t IN:ROOT IN:3.II OUT:ROOT OUT:SX
+a n h e IN:ROOT OUT:ROOT OUT:3.II
+a n h e IN:ROOT OUT:ROOT OUT:1SG.II
+a n h e t IN:ROOT IN:3.II OUT:ROOT
+a n h e t IN:ROOT IN:3.II OUT:ROOT OUT:1SG.II
+a n h e e ' y IN:ROOT IN:1SG.II OUT:ROOT
+a n h e e ' y IN:ROOT IN:1SG.II OUT:ROOT OUT:3.II
+w e l i IN:ROOT OUT:ROOT OUT:3.II
+w e l i IN:ROOT OUT:ROOT OUT:PL OUT:ATTR
+w e l i x t IN:ROOT IN:3.II OUT:ROOT
+w e l i x t IN:ROOT IN:3.II OUT:ROOT OUT:PL OUT:ATTR
+h u w e l i x i m IN:ROOT IN:PL IN:ATTR OUT:ROOT
+h u w e l i x i m IN:ROOT IN:PL IN:ATTR OUT:ROOT OUT:3.II
+a m G o o IN:ROOT OUT:ROOT OUT:3.II
+a m G o o t IN:ROOT IN:3.II OUT:ROOT
+s i p IN:ROOT OUT:ROOT OUT:PL OUT:3.II
+s i s i p t IN:ROOT IN:PL IN:3.II OUT:ROOT
+a n s g i IN:ROOT OUT:ROOT OUT:3.II
+a n s g i t IN:ROOT IN:3.II OUT:ROOT
+h l a m s IN:ROOT OUT:ROOT OUT:3.II
+h l a m s t IN:ROOT IN:3.II OUT:ROOT
+a g u IN:ROOT OUT:ROOT OUT:3.II
+a g u t IN:ROOT IN:3.II OUT:ROOT
+s a k s i n IN:ROOT OUT:ROOT OUT:3.II
+s a k s i n t IN:ROOT IN:3.II OUT:ROOT
+G a s G o o IN:ROOT OUT:ROOT OUT:SX
+G a s G o o IN:ROOT OUT:ROOT OUT:3.II
+G a s G o o t IN:ROOT IN:SX OUT:ROOT
+G a s G o o t IN:ROOT IN:SX OUT:ROOT OUT:3.II
+G a s G o o t IN:ROOT IN:3.II OUT:ROOT
+G a s G o o t IN:ROOT IN:3.II OUT:ROOT OUT:SX
+y u k w IN:ROOT OUT:ROOT OUT:3PL.II
+y u k w IN:ROOT OUT:ROOT OUT:3PL.II
+y u k w d i i t IN:ROOT IN:3PL.II OUT:ROOT
+y u k w d i i t IN:ROOT IN:3PL.II OUT:ROOT
+y u k w IN:ROOT OUT:ROOT OUT:3PL.II
+y u k w IN:ROOT OUT:ROOT OUT:3PL.II
+y u k w d i i t IN:ROOT IN:3PL.II OUT:ROOT
+y u k w d i i t IN:ROOT IN:3PL.II OUT:ROOT
+' n i i ' w a IN:ROOT OUT:ROOT OUT:3PL.II
+' n i i ' w a d i i t IN:ROOT IN:3PL.II OUT:ROOT
+j e m IN:ROOT OUT:ROOT OUT:3PL.II
+j e m d i i t IN:ROOT IN:3PL.II OUT:ROOT
+w i l K IN:ROOT OUT:ROOT OUT:3PL.II
+w i l K IN:ROOT OUT:ROOT OUT:3PL.II
+w i l K d i i t IN:ROOT IN:3PL.II OUT:ROOT
+w i l K d i i t IN:ROOT IN:3PL.II OUT:ROOT
+w i l K IN:ROOT OUT:ROOT OUT:3PL.II
+w i l K IN:ROOT OUT:ROOT OUT:3PL.II
+w i l K d i i t IN:ROOT IN:3PL.II OUT:ROOT
+w i l K d i i t IN:ROOT IN:3PL.II OUT:ROOT
+m e e X IN:ROOT OUT:ROOT OUT:3.II
+m e e X t IN:ROOT IN:3.II OUT:ROOT
+' m i t s ' i n IN:ROOT OUT:ROOT OUT:3PL.II
+' m i t s ' i n d i i t IN:ROOT IN:3PL.II OUT:ROOT
+s u u h l o ' o IN:ROOT OUT:ROOT OUT:3PL.II
+s u u h l o ' o d i i t IN:ROOT IN:3PL.II OUT:ROOT
+h l g u t ' i h l x w IN:ROOT OUT:ROOT OUT:1SG.II
+g u t ' i h l x w i ' y IN:ROOT IN:1SG.II OUT:ROOT
+t ' a a i n IN:ROOT OUT:ROOT OUT:3PL.II
+t ' a a d i n d i i t IN:ROOT IN:3PL.II OUT:ROOT
+t X a l p X IN:ROOT OUT:ROOT OUT:SX
+t X a l p X IN:ROOT OUT:ROOT OUT:1PL.II
+t X a l p X a t IN:ROOT IN:SX OUT:ROOT
+t X a l p X a t IN:ROOT IN:SX OUT:ROOT OUT:1PL.II
+t X a l p X u ' m IN:ROOT IN:1PL.II OUT:ROOT
+t X a l p X u ' m IN:ROOT IN:1PL.II OUT:ROOT OUT:SX
+g w e l k ' u j a X IN:ROOT OUT:ROOT OUT:3.II
+g w e l k ' u j a X t IN:ROOT IN:3.II OUT:ROOT
+y e t s IN:ROOT OUT:ROOT OUT:PL OUT:3PL.II
+h i s y e t s d i i t IN:ROOT IN:PL IN:3PL.II OUT:ROOT
+X b a a ' w IN:ROOT OUT:ROOT OUT:3.II
+X b a a ' w IN:ROOT OUT:ROOT OUT:3.II
+X b a a ' w t IN:ROOT IN:3.II OUT:ROOT
+X b a a ' w t IN:ROOT IN:3.II OUT:ROOT
+X b a a ' w IN:ROOT OUT:ROOT OUT:3.II
+X b a a ' w IN:ROOT OUT:ROOT OUT:3.II
+X b a a ' w t IN:ROOT IN:3.II OUT:ROOT
+X b a a ' w t IN:ROOT IN:3.II OUT:ROOT
+b a X y u x w IN:ROOT OUT:ROOT OUT:3PL.II
+b a X y u x w d i i t h l IN:ROOT IN:3PL.II OUT:ROOT
+h l g u t s ' u u s IN:ROOT OUT:ROOT OUT:3.II
+h l g u t s ' u u s IN:ROOT OUT:ROOT OUT:1PL.II
+h l g u t s ' u u s IN:ROOT OUT:ROOT OUT:1SG.II
+h l g u t s ' u u s x t IN:ROOT IN:3.II OUT:ROOT
+h l g u t s ' u u s x t IN:ROOT IN:3.II OUT:ROOT OUT:1PL.II
+h l g u t s ' u u s x t IN:ROOT IN:3.II OUT:ROOT OUT:1SG.II
+h l g u t s ' u u s g i ' m IN:ROOT IN:1PL.II OUT:ROOT
+h l g u t s ' u u s g i ' m IN:ROOT IN:1PL.II OUT:ROOT OUT:3.II
+h l g u t s ' u u s g i ' m IN:ROOT IN:1PL.II OUT:ROOT OUT:1SG.II
+h l g u t s ' u u s g i ' y IN:ROOT IN:1SG.II OUT:ROOT
+h l g u t s ' u u s g i ' y IN:ROOT IN:1SG.II OUT:ROOT OUT:3.II
+h l g u t s ' u u s g i ' y IN:ROOT IN:1SG.II OUT:ROOT OUT:1PL.II
+h u k s IN:ROOT OUT:ROOT OUT:2SG.II
+h u k s IN:ROOT OUT:ROOT OUT:1SG.II
+h u k s i n IN:ROOT IN:2SG.II OUT:ROOT
+h u k s i n IN:ROOT IN:2SG.II OUT:ROOT OUT:1SG.II
+h u k s i ' y IN:ROOT IN:1SG.II OUT:ROOT
+h u k s i ' y IN:ROOT IN:1SG.II OUT:ROOT OUT:2SG.II
+h l g u t s ' u u s IN:ROOT OUT:ROOT OUT:1PL.II
+h l g u t s ' u u s IN:ROOT OUT:ROOT OUT:1SG.II
+h l g u t s ' u u s g i ' m IN:ROOT IN:1PL.II OUT:ROOT
+h l g u t s ' u u s g i ' m IN:ROOT IN:1PL.II OUT:ROOT OUT:1SG.II
+h l g u t s ' u u s g i ' y IN:ROOT IN:1SG.II OUT:ROOT
+h l g u t s ' u u s g i ' y IN:ROOT IN:1SG.II OUT:ROOT OUT:1PL.II
+e e t s IN:ROOT OUT:ROOT OUT:ATTR
+e e j a m IN:ROOT IN:ATTR OUT:ROOT
+t s ' a k ' IN:ROOT OUT:ROOT OUT:3.II
+t s ' a k ' t IN:ROOT IN:3.II OUT:ROOT
+G a b i i IN:ROOT OUT:ROOT OUT:SX
+G a b i i IN:ROOT OUT:ROOT OUT:3.II
+G a b i i IN:ROOT OUT:ROOT OUT:3PL.II
+G a b i i t IN:ROOT IN:SX OUT:ROOT
+G a b i i t IN:ROOT IN:SX OUT:ROOT OUT:3.II
+G a b i i t IN:ROOT IN:SX OUT:ROOT OUT:3PL.II
+G a b i i t IN:ROOT IN:3.II OUT:ROOT
+G a b i i t IN:ROOT IN:3.II OUT:ROOT OUT:SX
+G a b i i t IN:ROOT IN:3.II OUT:ROOT OUT:3PL.II
+G a b i d i i t IN:ROOT IN:3PL.II OUT:ROOT
+G a b i d i i t IN:ROOT IN:3PL.II OUT:ROOT OUT:SX
+G a b i d i i t IN:ROOT IN:3PL.II OUT:ROOT OUT:3.II
+k ' a p IN:ROOT OUT:ROOT OUT:3.II
+k ' a p t IN:ROOT IN:3.II OUT:ROOT
+a d a a w K IN:ROOT OUT:ROOT OUT:3.II
+a d a a w K t IN:ROOT IN:3.II OUT:ROOT
+' y e n s IN:ROOT OUT:ROOT OUT:ATTR
+' y e n s IN:ROOT OUT:ROOT OUT:3.II
+' y e n s a IN:ROOT IN:ATTR OUT:ROOT
+' y e n s a IN:ROOT IN:ATTR OUT:ROOT OUT:3.II
+' y e n s t IN:ROOT IN:3.II OUT:ROOT
+' y e n s t IN:ROOT IN:3.II OUT:ROOT OUT:ATTR

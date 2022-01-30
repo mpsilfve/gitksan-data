@@ -75,15 +75,23 @@ def store_pic_dynamic(plt, fname, root_folder='results', use_pdf=False):
     savefig(plt, folder, fname, use_pdf)
 
 
-def store_csv_dynamic(frame, filename, root_folder='results'):
+def store_csv_dynamic(frame, filename, root_folder='results', include_date=True):
     date = datetime.today().strftime('%Y-%m-%d')
-    folder = "{}/{}/".format(root_folder, date)
+    if include_date:
+        folder = "{}/{}/".format(root_folder, date)
+    else:
+        folder = "{}".format(root_folder)
+
     if folder != '':
         try:
             makedirs(folder)
         except FileExistsError:
             pass
-    frame.to_csv(f'{root_folder}/{date}/{filename}.csv')
+
+    if include_date:
+        frame.to_csv(f'{root_folder}/{date}/{filename}.csv')
+    else: 
+        frame.to_csv(f'{root_folder}/{filename}.csv')
 
 # def load_csv_from_path(fname, root_folder='results', date=(datetime.today().strftime('%Y-%m-%d'))):
 #     folder = f'{root_folder}/{date}'

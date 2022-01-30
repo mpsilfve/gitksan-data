@@ -1,4 +1,15 @@
+import pandas as pd
 from ..utils.utils import map_list
+
+def combine_tags(source_tag, target_tag):
+    source_feats = source_tag.split(";")
+    target_feats = target_tag.split(";")
+    source_feats = list(map(lambda feat: f"IN:{feat}", source_feats))
+    target_feats = list(map(lambda feat: f"OUT:{feat}", target_feats))
+
+    source_tag_str = ";".join(source_feats)
+    target_tag_str = ";".join(target_feats)
+    return f"X;{source_tag_str};{target_tag_str}"
 
 def reformat(fname, finputname, foutputname):
     """will turn all English train, dev, (test if there is test data) into the format Fairseq requires,
@@ -19,6 +30,21 @@ def reformat(fname, finputname, foutputname):
             msd = lines[2].strip()
             input = [letter for letter in lemma] + [tag for tag in msd.split(';')[1:]] # NOTE: I don't include POS (position 0 in msd) for Gitksan. Should be changed for other languages.
             output = [letter for letter in form]
+            finput.write(' '.join(input) + '\n')
+            foutput.write(' '.join(output) + '\n')
+
+def reformat_from_frame(inflection_frame: pd.DataFrame, finputname: str, foutputname: str):
+    with open(finputname, 'w') as finput, \
+        open(foutputname, 'w') as foutput:
+        # for line in f:
+        for _, entry in inflection_frame.iterrows(): # TODO: needs to be fixed
+            source = entry.form_src 
+            tgt = entry.form_tgt
+            msd_src = entry.MSD_src
+            msd_tgt = entry.MSD_tgt
+            msd = combine_tags(msd_src, msd_tgt)
+            input = [letter for letter in source] + [tag for tag in msd.split(';')[1:]] 
+            output = [letter for letter in tgt] 
             finput.write(' '.join(input) + '\n')
             foutput.write(' '.join(output) + '\n')
 

@@ -3,7 +3,6 @@ import pandas as pd
 import argparse
 from itertools import combinations, permutations
 from collections import Counter
-from packages.utils.create_data_splits import make_all_pairs_frame
 
 from packages.utils.gitksan_table_utils import filter_paradigms, obtain_orthographic_value, obtain_paradigm_frames, obtain_tag, is_empty_entry , combine_tags, get_paradigm_to_counts, stream_all_paradigms, strip_accents, make_reinflection_frame, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, make_train_dev_seen_unseen_test_files, convert_inflection_file_to_frame
 from packages.utils.create_data_splits import *
@@ -109,11 +108,11 @@ def make_train_dev_test_split():
     challenge_test_frame_fraction = 0.1
     challenge_test_frame_size = math.ceil(challenge_test_frame_fraction * len(all_paradigms_frame))
     challenge_test_frame, rest_frame = divide_challenge_rest_frame(all_paradigms_frame, challenge_test_frame_size)
-    train_frame, dev_frame, standard_test_frame = create_train_dev_test_split(rest_frame, challenge_test_frame_fraction) 
-    store_csv_dynamic(challenge_test_frame, 'challenge_test_frame', "data/spreadsheets/standard_challenge_split")
-    store_csv_dynamic(train_frame, 'train_frame', "data/spreadsheets/standard_challenge_split")
-    store_csv_dynamic(dev_frame, 'dev_frame', "data/spreadsheets/standard_challenge_split")
-    store_csv_dynamic(standard_test_frame, 'standard_test_frame', "data/spreadsheets/standard_challenge_split")
+    train_frame, dev_frame, standard_test_frame = create_train_dev_test_split(rest_frame) 
+    store_csv_dynamic(challenge_test_frame, 'challenge_test_frame', "data/spreadsheets/standard_challenge_split", False)
+    store_csv_dynamic(train_frame, 'train_frame', "data/spreadsheets/standard_challenge_split", False)
+    store_csv_dynamic(dev_frame, 'dev_frame', "data/spreadsheets/standard_challenge_split", False)
+    store_csv_dynamic(standard_test_frame, 'standard_test_frame', "data/spreadsheets/standard_challenge_split", False)
 
 def make_condensed_paradigms_spreadsheet(): # top level
     """See https://glacier-impatiens-3c9.notion.site/Dataset-construction-dd569deb5ddd43349b1498703b51a6da
