@@ -1,13 +1,18 @@
 import numpy as np
-import unicodedata as ud
 from sklearn.model_selection import train_test_split
 from functools import partial
 import pandas as pd
 from collections import Counter
 from itertools import combinations, permutations
+from typing import List
+
+from packages.utils.paradigm_tree import calculate_mst_weight, gen_fully_connected_graph
+
 from .paradigm import *
 from .utils import map_list 
+from .paradigm_tree import *
 
+np.random.seed(0)
 
 def is_empty_entry(entry):
     return "\t_\t_\t_\t_" in entry
@@ -63,7 +68,7 @@ def obtain_unseen_test_frame(reinflection_frame, unseen_test_fraction=0.1):
     paradigms_extracted = []
 
     while num_forms_extracted < num_required_unseen_forms:
-        rand_paradigm_i = np.random.randint(len(paradigms))
+        rand_paradigm_i = np.random.randint(len(paradigms), )
         sampled_paradigm = paradigms[rand_paradigm_i]
         paradigm_frame = reinflection_frame[reinflection_frame['paradigm']==sampled_paradigm]
         paradigms_extracted.append(paradigm_frame)
@@ -92,37 +97,6 @@ def get_tag_feat_counts(reinflection_frame, form_col_name='source_tag'):
     source_form_series.apply(lambda tag: [update_counter(feat) for feat in tag.split(';')])
     return tag_feat_counter
 
-def strip_accents(s):
-    """Replace x̲ with X
-               k̲ with K
-               g̲ with G
-
-    Important for application of the MNC tool, which doesn't handle diacritics well.
-
-    Args:
-        s (str): Gitksan word
-
-    Returns:
-        [str]: String with diacritics substituted for capitals.
-    """
-    clean_s = ""
-    # return ''.join(c for c in unicodedata.normalize('NFD', s)
-    #                 if unicodedata.category(c) != 'Mn')
-    i = 0
-    while i < len(s):
-        ud_name_cur = ud.name(s[i])
-        if ud_name_cur in ["latin small letter k".upper(), "latin small letter g".upper(), "latin small letter x".upper()]:
-            if (i+1) < len(s):
-                ud_name_next = ud.name(s[i+1])
-                if ud_name_next == "combining low line".upper():
-                    clean_s += s[i].upper() # replace diacritic with uppercase
-                else:
-                    clean_s += s[i] # k, g, x
-        else:
-            if ud_name_cur != "combining low line".upper():
-                clean_s += s[i] # all other characters (e.g., letters and apostrophes)
-        i += 1
-    return clean_s
 
 def stream_all_paradigms(fname):
     with open(fname, 'r') as gp_f:
@@ -195,6 +169,79 @@ def make_reinflection_frame(paradigms, include_root):
     })
     return paradigm_frame 
 
+def filter_paradigms(paradigms):
+    """
+
+    Args:
+        paradigms ([Paradigm]): List of paradigms
+    
+    Returns:
+        [Paradigm]: Array of paradigms.
+    """
+    pass_paradigms = []
+    for paradigm in paradigms:
+        num_roots = paradigm.count_num_roots()
+        if num_roots >= 1:
+            num_forms = paradigm.count_num_forms()
+            if num_forms >= 1:
+                pass_paradigms.append(paradigm)
+    return pass_paradigms
+
+# TODO: test this.
+def obtain_paradigm_frames(paradigms: List[Paradigm]):
+    """Filters MSDs that have duplicate entries for paradigms using 
+    a Minimum Spanning Tree algorithm.
+
+    Args:
+        paradigms (List[Paradigm]): Paradigms extracted from raw paradigms file (whitespace....txt)
+    
+    Returns:
+        [pd.DataFrame]: DataFrames with one entry per MSD.
+    """
+    filtered_frames = []
+    for paradigm in paradigms:
+        if paradigm.has_multiple_entries_for_msd():
+            msd_forms_sequence = paradigm.get_msds_forms_sequence()
+            forms_sequence = map_list(lambda msd_forms: msd_forms[1], msd_forms_sequence)
+            perms = generate_permutations(forms_sequence)
+            mst_weights = calculate_mst_weights_for_perms(perms)
+            filtered_frame = extract_filtered_frame(perms, mst_weights, msd_forms_sequence, paradigm.frame)
+            filtered_frames.append(filtered_frame)
+        else:
+            filtered_frames.append(paradigm.frame)
+    return filtered_frames
+
+# TODO: test this.
+def extract_filtered_frame(perms, mst_weights, msd_form_seq, paradigm_frame):
+    """Extract the filtered frame from ...
+
+    Args:
+        perms ([[str]]): all possible realizations of the paradigm. 
+        mst_weights ([int]): MST cumulative weights; parallel to {perms}
+        paradigm_frame (pd.DataFrame): [description]
+    """
+    min_weight_i = mst_weights.index(min(mst_weights))
+    best_perm = perms[min_weight_i]
+    for i in range(len(msd_form_seq)):
+        msd = msd_form_seq[i][0]
+        forms = msd_form_seq[i][1] 
+        if len(forms) > 1:
+            best_form = best_perm[i]
+            msd_inds = paradigm_frame[paradigm_frame["MSD"] == msd].index.values
+            best_form_ind = paradigm_frame[(paradigm_frame["MSD"] == msd) & (paradigm_frame["form"] == best_form)].index.values[0]
+            suboptimal_inds = set(msd_inds).difference([best_form_ind])
+            paradigm_frame = paradigm_frame.drop(index=[ind for ind in suboptimal_inds])
+    return paradigm_frame
+
+def calculate_mst_weights_for_perms(perms):
+    mst_weights = []
+    for perm in perms:
+        graph = gen_fully_connected_graph(perm)
+        graph_mst = obtain_mst(graph)
+        mst_weight = calculate_mst_weight(graph_mst)
+        mst_weights.append(mst_weight)
+    return mst_weights
+
 def extract_non_empty_paradigms(paradigm_fname):
     num_paradigms = 0
     non_empty_paradigms = []
@@ -226,54 +273,15 @@ def make_train_dev_test_files(frame, dir_suffix, obtain_tdt_split):
 
 def obtain_train_dev_test_split(frame, train_ratio=0.8, dev_ratio=0.1, test_ratio=0.1):
     x_train, x_test = train_test_split(frame, test_size=1 - train_ratio, random_state=0)
-    x_val, x_test = train_test_split(x_test, test_size=test_ratio/(test_ratio + dev_ratio), shuffle=False)
+    x_val, x_test = train_test_split(x_test, test_size=test_ratio/(test_ratio + dev_ratio), shuffle=False, random_state=0)
     return x_train, x_val, x_test
 
-def make_covered_test_file(path_fname, test_frame):
-    def _write_test_covered_line(test_covered_f, row):
-        target_tag = row.target_tag
-
-        reinflection_line = f'{strip_accents(row.source_form.strip())}\t{target_tag}\n'
-        line_elems = reinflection_line.split('\t')
-        assert len(line_elems) == 2
-        test_covered_f.write(reinflection_line)
-    with open(f'data/spreadsheets/{path_fname}', 'w') as test_covered_f:
-        test_frame.apply(partial(_write_test_covered_line, test_covered_f), axis=1)
-
-    # inputs = []
-    # tags = []
-    # with open("data/spreadsheets/gitksan_productive.test", 'r') as gitksan_test_file:
-    #     for line in gitksan_test_file:
-    #         i_form, o_form, tag = line.split('\t') 
-    #         inputs.append(i_form)
-    #         tags.append(tag)
-    # with open('data/spreadsheets/gitksan_productive_covered.test', 'w') as gitksan_test_file_covered:
-    #     for i in range(len(inputs)):
-    #         i_form = inputs[i]
-    #         tag = tags[i]
-    #         gitksan_test_file_covered.write(f'{i_form}\t{tag}')
-
-# TODO: can get rid of dir_suffix; w_root is practically always better.
-# def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
-#     """
-#     Args:
-#         frame (pd.DataFrame): Reinflection frame
-#         dir_suffix (str): w_root
-#         write_reinflection_line ((pd.DataFrame) => str): Converts row in {frame} to a string representing entry in inflection dataset.
-#     """
-#     train_frame, dev_frame, test_frame = obtain_train_dev_test_split(frame)
-#     train_frame, seen_test_frame = obtain_seen_test_frame(train_frame)
-#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.train', train_frame, proc_frame_row)
-#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.dev', dev_frame, proc_frame_row)
-#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', test_frame, proc_frame_row)
-#     write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame, proc_frame_row)
-#     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', test_frame)
-#     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', test_frame)
-
+# TODO: need to rewrite this function...
+    # the frame should be 
 def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
     """
     Args:
-        frame (pd.DataFrame): Reinflection frame
+        frame (pd.DataFrame): |word|tag|paradigm_i|
         dir_suffix (str): w_root
         write_reinflection_line ((pd.DataFrame) => str): Converts row in {frame} to a string representing entry in inflection dataset.
     """
@@ -296,7 +304,6 @@ def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
     make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', seen_test_frame)
 
     return non_train_paradigms
-
 
 def get_target_to_paradigm_mapping(paradigms):
     """Returns a target to paradigm mapping.
