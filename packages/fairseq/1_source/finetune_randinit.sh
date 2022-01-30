@@ -6,6 +6,8 @@
 #SBATCH --job-name=TransformerRandinitTrain
 #SBATCH --output=/scratch/fsamir8/finetune_randinit/gitksan.out
 #SBATCH --error=/scratch/fsamir8/finetune_randinit/gitksan.error
+#SBATCH --mail-type=END,FAIL,INVALID_DEPEND
+#SBATCH --mail-user=fsamir@mail.ubc.ca
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/NVIDIA/cuda-9.0/lib64
 export CUDA_VISIBLE_DEVICES=0
@@ -48,4 +50,3 @@ fairseq-train $PREPROCESS \
     --max-epoch 1000 \
     --log-format json --log-interval 20 
 EOF
-
