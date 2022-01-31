@@ -1,15 +1,17 @@
-from posixpath import split
+from os import system 
+from os import makedirs
 import pandas as pd
 import argparse
+from datetime import datetime
 import subprocess
 
-from packages.utils.constants import STD_CHL_SPLIT_PATH
+from packages.utils.constants import STD_CHL_SPLIT_PATH, ONESOURCE_RESULTS_PATH, RESULTS_FNAMES
 from packages.pkl_operations.pkl_io import store_csv_dynamic
 from packages.utils.create_data_splits import make_all_pairs_frame
 from packages.fairseq.fairseq_format import produce_fairseq_data, reformat_from_frame
 from packages.fairseq.utils import extract_hypotheses, extract_hypotheses_mbr
 from packages.utils.gitksan_table_utils import get_target_to_paradigm_mapping, extract_non_empty_paradigms, convert_inflection_file_to_frame, get_paradigm_inds
-from packages.utils.utils import map_list, make_dir_if_n_exist
+from packages.utils.utils import map_list 
 from packages.eval.eval import eval_accuracy_oracle, eval_paradigm_accuracy_random, eval_paradigm_accuracy_max, eval_accuracy_per_row
 from packages.fairseq.parse_results_files import parse_results_w_logit_file, expand_to_char_frame
 from packages.calibration.temperature_scale import ModelWithTemperature
@@ -74,11 +76,9 @@ def eval_fairseq_cross_table_random(inflection_fname, prediction_fname, num_hypo
 def eval_fairseq_1_source_random(inflection_fname, prediction_fname, num_hypotheses):
     """Conducts PCFP evaluation on the cross-table data augmentation format =)
     """
-    # inflection_fname = "data/spreadsheets/seen_unseen_split_w_root/gitksan_productive_seen.test"
-    # inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive_seen.test"
-    frame = convert_inflection_file_to_frame(inflection_fname)
+    frame = pd.read_csv(inflection_fname)
+    # frame = convert_inflection_file_to_frame(inflection_fname)
 
-    # prediction_fname = "results/2021-11-19/1_source/results_seen_test.txt"
     predictions, confidences = extract_hypotheses(prediction_fname, num_hypotheses)
     frame['predictions'] = predictions
     frame['confidences'] = confidences
@@ -88,9 +88,10 @@ def eval_fairseq_1_source_random(inflection_fname, prediction_fname, num_hypothe
 
     # frame['paradigm_i'] = frame.apply(lambda row: target_to_paradigm_mapping[f'{row.target}_{row.target_msd}'], axis=1)
 
-    eval_paradigm_accuracy_random(frame)
-    eval_accuracy_oracle(frame)
-    eval_accuracy_per_row(frame)
+    # eval_paradigm_accuracy_random(frame)
+    # eval_accuracy_oracle(frame)
+    eval_paradigm_accuracy_max(frame)
+    # eval_accuracy_per_row(frame)
     return frame
 
 def eval_fairseq_1_source_max(inflection_fname, prediction_fname, num_hypotheses):
@@ -117,7 +118,6 @@ def generate_fairseq_files(split_type_to_frame, aug_strategy, split_path):
 
     inflection_frame_save_path = f"{split_path}/{aug_strategy}"
     fairseq_save_dir = f"{inflection_frame_save_path}/fairseq"
-    make_dir_if_n_exist(fairseq_save_dir)
 
     train_frame = split_type_to_frame["train"]
     dev_frame = split_type_to_frame["dev"]
@@ -151,6 +151,17 @@ def generate_fairseq_files_all_pairs():
     }
     generate_fairseq_files(split_type_to_frame, "cross_product_source", STD_CHL_SPLIT_PATH)
 
+def pull_onesource_results():
+    date = datetime.today().strftime('%Y-%m-%d')
+    folder = f"results/{date}/onesource"
+    try:
+        makedirs(folder)
+    except FileExistsError:
+        pass
+
+    for fname in RESULTS_FNAMES:
+        system(f"scp {ONESOURCE_RESULTS_PATH}/{fname} {folder}/{fname}")
+
 def main(args):
     if args.produce_fairseq_data_cross_table:
         produce_fairseq_data_cross_table()
@@ -164,10 +175,10 @@ def main(args):
         eval_fairseq_cross_table_random(f"{inflection_fname_prefix}/gitksan_productive_seen.test", f"{prediction_fname_prefix}/results_seen_test.txt", 5)
         eval_fairseq_cross_table_random(f"{inflection_fname_prefix}/gitksan_productive_unseen.test", f"{prediction_fname_prefix}/results_unseen_test.txt", 5)
     elif args.eval_fairseq_1_source_random:
-        inflection_fname_prefix = "data/spreadsheets/seen_unseen_split_w_root"
-        prediction_fname_prefix = "results/2021-11-19/1_source"
-        eval_fairseq_1_source_random(f"{inflection_fname_prefix}/gitksan_productive_seen.test", f"{prediction_fname_prefix}/results_seen_test.txt", 5)
-        eval_fairseq_1_source_random(f"{inflection_fname_prefix}/gitksan_productive_unseen.test", f"{prediction_fname_prefix}/results_unseen_test.txt", 4)
+        inflection_fname_prefix = f"{STD_CHL_SPLIT_PATH}/cross_product_source"
+        prediction_fname_prefix = "results/2022-01-30/onesource"
+        eval_fairseq_1_source_random(f"{inflection_fname_prefix}/challenge_test_frame.csv", f"{prediction_fname_prefix}/results_challenge_test.txt", 5)
+        eval_fairseq_1_source_random(f"{inflection_fname_prefix}/standard_test_frame.csv", f"{prediction_fname_prefix}/results_standard_test.txt", 5)
     elif args.eval_fairseq_1_source_max:
         inflection_fname_prefix = "data/spreadsheets/seen_unseen_split_w_root"
         prediction_fname_prefix = "results/2021-11-19/1_source"
@@ -180,9 +191,13 @@ def main(args):
         eval_fairseq_1_source_random(f"{inflection_fname_prefix}/gitksan_productive_unseen.test", f"{prediction_fname_prefix}/results_unseen_test.txt", 5)
     elif args.generate_fairseq_files_all_pairs:
         generate_fairseq_files_all_pairs()
+    elif args.pull_onesource_results:
+        pull_onesource_results()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--pull_onesource_results', action='store_true')
     parser.add_argument('--produce_fairseq_data_cross_table', action='store_true')
     parser.add_argument('--generate_fairseq_files_all_pairs', action='store_true')
     parser.add_argument('--produce_fairseq_data_regular', action='store_true')
