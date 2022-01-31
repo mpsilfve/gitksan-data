@@ -49,4 +49,3 @@ fairseq-train $PREPROCESS \
     --update-freq 1 \
     --max-epoch 1000 \
     --log-format json --log-interval 20 
-EOF
