@@ -17,15 +17,6 @@ np.random.seed(0)
 def is_empty_entry(entry):
     return "\t_\t_\t_\t_" in entry
 
-def combine_tags(source_tag, target_tag):
-    source_feats = source_tag.split(";")
-    target_feats = target_tag.split(";")
-    source_feats = list(map(lambda feat: f"IN:{feat}", source_feats))
-    target_feats = list(map(lambda feat: f"OUT:{feat}", target_feats))
-
-    source_tag_str = ";".join(source_feats)
-    target_tag_str = ";".join(target_feats)
-    return f"X;{source_tag_str};{target_tag_str}"
 
 def filter_prefix(prefix, tag):
     elems = tag.split(f'{prefix}:')
@@ -348,10 +339,10 @@ def convert_inflection_file_to_frame(inflection_fname):
         paradigm_ind = entries[-1].strip()
         paradigm_inds.append(paradigm_ind)
     frame = pd.DataFrame({
-        "source": sources, 
-        "target": targets,
-        "source_msd": map_list( partial(filter_prefix, 'IN'), source_msds), 
-        "target_msd": map_list( partial(filter_prefix, 'OUT'), target_msds),
+        "form_src": sources, 
+        "form_tgt": targets,
+        "MSD_src": map_list( partial(filter_prefix, 'IN'), source_msds), 
+        "MSD_tgt": map_list( partial(filter_prefix, 'OUT'), target_msds),
         "paradigm_i": paradigm_inds
     })
     return frame

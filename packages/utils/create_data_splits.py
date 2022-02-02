@@ -2,10 +2,14 @@
     - a standard test split
     - a challenge test split (paradigms unobserved during training).
 """
+from os import sys
 from typing import Tuple, List
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
+
+from packages.fairseq.fairseq_format import combine_tags
+from .gitksan_table_utils import convert_inflection_file_to_frame
 
 np.random.seed(0)
 
@@ -72,3 +76,21 @@ def make_all_pairs_frame(source_frame, target_frame):
     paradigm_join_frame = pd.merge(source_frame, target_frame, on="paradigm_i", suffixes=["_src", "_tgt"])
     dataset_frame = paradigm_join_frame.loc[paradigm_join_frame["MSD_src"] != paradigm_join_frame["MSD_tgt"]]
     return dataset_frame
+
+def add_hallucination_examples(reinflection_frame: pd.DataFrame, save_path: str) -> pd.DataFrame:
+    """
+    Args:
+        reinflection_frame (pd.DataFrame): DataFrame with |MSD_src|MSD_tgt|form_src|form_tgt| (among others).
+    """
+    with open(f"{save_path}/gitksan-train", "w") as sigm_format_train:
+        reinflection_frame.apply(lambda row: sigm_format_train.write(f"{row.form_src}\t{row.form_tgt}\t{combine_tags(row.MSD_src, row.MSD_tag)}"), axis=1)
+    
+    sys(f"mv {save_path}/gitksan-train $WORKING_DIR/inflection/sample-data")
+    sys(f"packages/utils/hallucinate_gitksan_data.sh {save_path}")
+
+    hallucination_frame = convert_inflection_file_to_frame(f"{save_path}/gitksan-hall")
+    reinflection_columns = reinflection_frame.columns.values
+    hallucination_columns = hallucination_frame.columns.values
+    for column in set(reinflection_columns).difference(hallucination_columns):
+        hallucination_frame[column] = len(hallucination_frame) * ["HALL"]
+    return pd.concat([reinflection_frame, hallucination_frame])

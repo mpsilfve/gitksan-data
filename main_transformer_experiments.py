@@ -7,7 +7,7 @@ import subprocess
 
 from packages.utils.constants import STD_CHL_SPLIT_PATH, ONESOURCE_RESULTS_PATH, RESULTS_FNAMES
 from packages.pkl_operations.pkl_io import store_csv_dynamic
-from packages.utils.create_data_splits import make_all_pairs_frame
+from packages.utils.create_data_splits import make_all_pairs_frame, add_hallucination_examples
 from packages.fairseq.fairseq_format import produce_fairseq_data, reformat_from_frame
 from packages.fairseq.utils import extract_hypotheses, extract_hypotheses_mbr
 from packages.utils.gitksan_table_utils import get_target_to_paradigm_mapping, extract_non_empty_paradigms, convert_inflection_file_to_frame, get_paradigm_inds
@@ -113,7 +113,7 @@ def generate_fairseq_files(split_type_to_frame, aug_strategy, split_path):
         save_path (str): Where to save the fairseq files (f"{save_path}/fairseq/...") and 
             the (re)inflection frames. 
     """
-    if aug_strategy == "cross_product_source":
+    if aug_strategy in ["cross_product_source", "cross_product_hallucination"]:
         make_reinflection_frame = make_all_pairs_frame
 
     inflection_frame_save_path = f"{split_path}/{aug_strategy}"
@@ -127,6 +127,8 @@ def generate_fairseq_files(split_type_to_frame, aug_strategy, split_path):
     for split_type in split_type_to_frame:
         if split_type == "train":
             reinflection_frame = make_reinflection_frame(train_frame, train_frame)
+            if aug_strategy == "cross_product_hallucination":
+                reinflection_frame = add_hallucination_examples(reinflection_frame)
             store_csv_dynamic(reinflection_frame, "train_frame", root_folder=inflection_frame_save_path, include_date=False)
             reformat_from_frame(reinflection_frame, f"{fairseq_save_dir}/gitksan-train.src", f"{fairseq_save_dir}/gitksan-train.tgt")
         elif split_type == "dev":
@@ -142,6 +144,7 @@ def generate_fairseq_files(split_type_to_frame, aug_strategy, split_path):
             store_csv_dynamic(reinflection_frame, "challenge_test_frame", root_folder=inflection_frame_save_path, include_date=False)
             reformat_from_frame(reinflection_frame, f"{fairseq_save_dir}/gitksan-challenge_test.src", f"{fairseq_save_dir}/gitksan-challenge_test.tgt")
 
+
 def generate_fairseq_files_all_pairs():
     split_type_to_frame = {
         "train": pd.read_csv(f"{STD_CHL_SPLIT_PATH}/train_frame.csv"),
@@ -150,6 +153,15 @@ def generate_fairseq_files_all_pairs():
         "challenge_test": pd.read_csv(f"{STD_CHL_SPLIT_PATH}/challenge_test_frame.csv")
     }
     generate_fairseq_files(split_type_to_frame, "cross_product_source", STD_CHL_SPLIT_PATH)
+
+def generate_fairseq_files_hallucination():
+    split_type_to_frame = {
+        "train": pd.read_csv(f"{STD_CHL_SPLIT_PATH}/train_frame.csv"),
+        "dev": pd.read_csv(f"{STD_CHL_SPLIT_PATH}/dev_frame.csv"),
+        "standard_test": pd.read_csv(f"{STD_CHL_SPLIT_PATH}/standard_test_frame.csv"),
+        "challenge_test": pd.read_csv(f"{STD_CHL_SPLIT_PATH}/challenge_test_frame.csv")
+    }
+    generate_fairseq_files(split_type_to_frame, "cross_product_w_hallucination", STD_CHL_SPLIT_PATH)
 
 def pull_onesource_results():
     date = datetime.today().strftime('%Y-%m-%d')
@@ -191,6 +203,8 @@ def main(args):
         eval_fairseq_1_source_random(f"{inflection_fname_prefix}/gitksan_productive_unseen.test", f"{prediction_fname_prefix}/results_unseen_test.txt", 5)
     elif args.generate_fairseq_files_all_pairs:
         generate_fairseq_files_all_pairs()
+    elif args.generate_fairseq_files_hallucination:
+        generate_fairseq_files_hallucination()
     elif args.pull_onesource_results:
         pull_onesource_results()
 
@@ -200,6 +214,7 @@ if __name__ == '__main__':
     parser.add_argument('--pull_onesource_results', action='store_true')
     parser.add_argument('--produce_fairseq_data_cross_table', action='store_true')
     parser.add_argument('--generate_fairseq_files_all_pairs', action='store_true')
+    parser.add_argument('--generate_fairseq_files_hallucination', action='store_true')
     parser.add_argument('--produce_fairseq_data_regular', action='store_true')
     parser.add_argument('--produce_fairseq_data_hall', action='store_true')
     parser.add_argument('--eval_fairseq_cross_table_random', action='store_true')
