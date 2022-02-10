@@ -215,7 +215,7 @@ def convert_inflection_file_to_frame(inflection_fname):
         source = entries[0]
         target = entries[1]
         out_start_i = entries[2].index("OUT:") 
-        source_msd = entries[2][2:out_start_i - 1]# -1 to exclude semicolon. Start from 2 to remove X: marker
+        source_msd = entries[2][0:out_start_i - 1]# -1 to exclude semicolon. Start from 2 to remove X: marker
         target_msd = entries[2][out_start_i:].strip()
         sources.append(source)
         targets.append(target)
