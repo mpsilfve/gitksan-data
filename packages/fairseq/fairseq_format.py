@@ -9,7 +9,7 @@ def combine_tags(source_tag, target_tag):
 
     source_tag_str = ";".join(source_feats)
     target_tag_str = ";".join(target_feats)
-    return f"X;{source_tag_str};{target_tag_str}"
+    return f"{source_tag_str};{target_tag_str}"
 
 def reformat(fname, finputname, foutputname):
     """will turn all English train, dev, (test if there is test data) into the format Fairseq requires,

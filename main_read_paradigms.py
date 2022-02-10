@@ -4,7 +4,8 @@ import argparse
 from itertools import combinations, permutations
 from collections import Counter
 
-from packages.utils.gitksan_table_utils import filter_paradigms, obtain_orthographic_value, obtain_paradigm_frames, obtain_tag, is_empty_entry , combine_tags, get_paradigm_to_counts, stream_all_paradigms, strip_accents, make_reinflection_frame, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, make_train_dev_seen_unseen_test_files, convert_inflection_file_to_frame
+
+from packages.utils.gitksan_table_utils import filter_paradigms, obtain_orthographic_value, obtain_paradigm_frames, obtain_tag, is_empty_entry , get_paradigm_to_counts, stream_all_paradigms, strip_accents, extract_non_empty_paradigms, make_train_dev_test_files, obtain_train_dev_test_split, write_mc_file, convert_inflection_file_to_frame
 from packages.utils.create_data_splits import *
 from packages.pkl_operations.pkl_io import store_csv_dynamic
 from packages.utils.constants import *
@@ -126,28 +127,17 @@ def make_condensed_paradigms_spreadsheet(): # top level
     all_paradigms_frame = pd.concat(condensed_paradigms)
     store_csv_dynamic(all_paradigms_frame, "condensed_paradigms.csv", "data/spreadsheets/standard_challenge_split")
 
-def check_unseen_test_files():
-    train_inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive.train"
-    train_frame = convert_inflection_file_to_frame(train_inflection_fname)
-    unseen_inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive_unseen.test"
-    unseen_frame = convert_inflection_file_to_frame(unseen_inflection_fname)
-
-    seen_inflection_fname = "data/spreadsheets/seen_unseen_split_w_root_cross_table/gitksan_productive_seen.test"
-    seen_frame = convert_inflection_file_to_frame(seen_inflection_fname)
-
-    test_inds = set(seen_frame['paradigm_i'].values).union(set(unseen_frame['paradigm_i'].values))
-    unseen_test_inds = set(unseen_frame['paradigm_i'].values)
-    seen_test_inds = set(seen_frame['paradigm_i'].values)
-    train_inds = set(train_frame['paradigm_i'].values)
-    print(unseen_test_inds.intersection(train_inds))
-    print(unseen_test_inds.intersection(seen_test_inds))
-    print(len(unseen_frame))
-    print(len(seen_frame))
-
 def make_all_pairs_dataset():
     train_frame = pd.read_csv(f"{STD_CHL_SPLIT_PATH}/type_split/train_frame.csv")
     train_dataset = make_all_pairs_frame(train_frame, train_frame) 
 
+def inspect_split_sizes():
+    challenge_test_frame = pd.read_csv(f"{STD_CHL_SPLIT_PATH}/challenge_test_frame.csv")
+    standard_test_frame = pd.read_csv(f"{STD_CHL_SPLIT_PATH}/standard_test_frame.csv")
+    num_paradigms_challenge = len(set(challenge_test_frame['paradigm_i'].values))
+    num_paradigms_standard = len(set(standard_test_frame['paradigm_i'].values))
+    print(f"Number of paradigms in challenge: {num_paradigms_challenge}")
+    print(f"Number of paradigms in standard: {num_paradigms_standard}")
 
 def main(args):
     if args.make_reinflection_frame_csv:
@@ -166,12 +156,14 @@ def main(args):
         plot_paradigm_fullness_distribution()
     elif args.plot_num_forms_per_msd:
         plot_num_forms_per_msd()
-    elif args.check_unseen_test_files:
-        check_unseen_test_files()
-    elif args.make_cartesian_product_source_files:
-        make_cartesian_product_source_files()
-    elif args.make_random_source:
-        make_random_source_files()
+    # elif args.check_unseen_test_files:
+    #     check_unseen_test_files()
+    # elif args.make_cartesian_product_source_files:
+    #     make_cartesian_product_source_files()
+    # elif args.make_random_source:
+    #     make_random_source_files()
+    elif args.inspect_split_sizes:
+        inspect_split_sizes()
 
 
         
@@ -187,6 +179,7 @@ if __name__ == "__main__":
     parser.add_argument('--make_cross_table_train_dev_seen_unseen_test_files', action='store_true')
 
     parser.add_argument('--make_covered_test_file', action='store_true')
+    parser.add_argument('--inspect_split_sizes', action='store_true')
     parser.add_argument('--diagnose_train_dev_test_files', action='store_true')
     parser.add_argument('--check_unseen_test_files', action='store_true')
     parser.add_argument('--plot_char_distribution', action='store_true')
