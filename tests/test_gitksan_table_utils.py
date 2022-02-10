@@ -199,6 +199,16 @@ def test_get_target_to_paradigm_mapping():
     print(form_msd_to_paradigm.keys())
     assert form_msd_to_paradigm["ayook̲_ROOT"] == 0
 
+def test_get_all_reduplications():
+    train_frame = pd.read_csv("tests/resources/train_type_split_redup.csv")
+    redup_frame = get_all_reduplications(train_frame)
+    assert len(redup_frame) == 3
+
+def test_get_all_suppletions():
+    train_frame = pd.read_csv("tests/resources/train_type_split_supp.csv")
+    redup_frame = get_all_suppletions(train_frame)
+    assert len(redup_frame) == 5
+
 @pytest.fixture()
 def mc_file_resource():
     yield 

@@ -3,7 +3,6 @@ from sklearn.model_selection import train_test_split
 from functools import partial
 import pandas as pd
 from collections import Counter
-from itertools import combinations, permutations
 from typing import List
 
 from packages.utils.paradigm_tree import calculate_mst_weight, gen_fully_connected_graph
@@ -17,7 +16,6 @@ np.random.seed(0)
 def is_empty_entry(entry):
     return "\t_\t_\t_\t_" in entry
 
-
 def filter_prefix(prefix, tag):
     elems = tag.split(f'{prefix}:')
     tag = ''.join(elems)
@@ -28,30 +26,6 @@ def get_paradigm_to_counts(frame):
     paradigm_to_counts = frame['paradigm'].value_counts()
     return paradigm_to_counts.to_dict()
 
-# TODO: there is a bug here
-# def obtain_seen_test_frame(train_frame, seen_test_fraction=0.1):
-#     train_frame = train_frame.sample(frac=1)
-#     paradigm_to_counts = get_paradigm_to_counts(train_frame)
-#     extracted_inds = set([]) 
-#     num_seen_test_samples = int(seen_test_fraction * len(train_frame))
-#     num_extracted = 0
-#     for row in train_frame.itertuples(): 
-#         ind = row[0] 
-#         paradigm = row.paradigm
-#         if ind in extracted_inds or paradigm_to_counts[paradigm] == 1:
-#             continue
-#         else:
-#             extracted_inds.add(ind)
-#             paradigm_to_counts[paradigm] -= 1
-#             num_extracted += 1  
-        
-#         if num_extracted == num_seen_test_samples:
-#             break
-#     seen_test_frame = train_frame.loc[extracted_inds]
-#     train_frame_wo_seen_test_frame = train_frame.drop(extracted_inds, axis=0)
-#     return train_frame_wo_seen_test_frame, seen_test_frame
-
-# TODO: need to test
 def obtain_unseen_test_frame(reinflection_frame, unseen_test_fraction=0.1):
     num_required_unseen_forms = len(reinflection_frame) * unseen_test_fraction
     paradigms = list(set(reinflection_frame['paradigm'].values))
@@ -88,7 +62,6 @@ def get_tag_feat_counts(reinflection_frame, form_col_name='source_tag'):
     source_form_series.apply(lambda tag: [update_counter(feat) for feat in tag.split(';')])
     return tag_feat_counter
 
-
 def stream_all_paradigms(fname):
     with open(fname, 'r') as gp_f:
         gp_f.readline()
@@ -101,64 +74,6 @@ def stream_all_paradigms(fname):
                 line = gp_f.readline()
             yield Paradigm(paradigm, paradigm_num)
             paradigm_num += 1
-
-def make_reinflection_frame(paradigms, include_root):
-    """Creates a DataFrame containing every two word-form permutation in every paradigm
-
-    Arguments:
-        paradigms [Paradigm,...]: List of Paradigms extracted from 
-    """
-    def _filter_paradigm(p):
-        num_roots = p.count_num_roots()
-        num_wfs = p.count_num_forms()
-        if num_roots == 0:
-            return num_wfs >= 2
-        elif num_wfs == 0:
-            return False 
-        elif num_wfs == 1:
-            # return num_roots != 0
-            return False
-        else:
-            return True
-
-    mult_entry_paradigms = filter(_filter_paradigm, paradigms)
-    source_forms = []
-    source_tags = []
-    target_forms = []
-    target_tags = []
-    paradigm_indices = []
-    for paradigm in mult_entry_paradigms:
-        form_tag_pairs = []
-        for entry in paradigm.entries: 
-            if not is_empty_entry(entry): 
-                form = obtain_orthographic_value(entry)
-                tag = obtain_tag(entry)
-                form_tag_pairs.append((form, tag))
-
-        if not paradigm.is_empty_roots() and include_root:
-            first_root = paradigm.roots[0]
-            root_form = obtain_orthographic_value(first_root)
-            tag = "ROOT"
-            form_tag_pairs.append((root_form, tag))
-
-        # this will be of the form [((form, tag), (form, tag)), ((form, tag), (form, tag)), ...]
-        source_target_combinations = permutations(form_tag_pairs, 2)
-        num_combs = 0
-        for source_target_comb in source_target_combinations:
-            source_forms.append(source_target_comb[0][0])
-            source_tags.append(source_target_comb[0][1])
-            target_forms.append(source_target_comb[1][0])
-            target_tags.append(source_target_comb[1][1])
-            num_combs += 1
-        paradigm_indices.extend([paradigm.paradigm_index] * num_combs)
-    paradigm_frame = pd.DataFrame({
-        "source_form": source_forms, 
-        "source_tag": source_tags, 
-        "target_form": target_forms,
-        "target_tag": target_tags, 
-        "paradigm": paradigm_indices 
-    })
-    return paradigm_frame 
 
 def filter_paradigms(paradigms):
     """
@@ -178,7 +93,6 @@ def filter_paradigms(paradigms):
                 pass_paradigms.append(paradigm)
     return pass_paradigms
 
-# TODO: test this.
 def obtain_paradigm_frames(paradigms: List[Paradigm]):
     """Filters MSDs that have duplicate entries for paradigms using 
     a Minimum Spanning Tree algorithm.
@@ -202,7 +116,6 @@ def obtain_paradigm_frames(paradigms: List[Paradigm]):
             filtered_frames.append(paradigm.frame)
     return filtered_frames
 
-# TODO: test this.
 def extract_filtered_frame(perms, mst_weights, msd_form_seq, paradigm_frame):
     """Extract the filtered frame from ...
 
@@ -267,34 +180,6 @@ def obtain_train_dev_test_split(frame, train_ratio=0.8, dev_ratio=0.1, test_rati
     x_val, x_test = train_test_split(x_test, test_size=test_ratio/(test_ratio + dev_ratio), shuffle=False, random_state=0)
     return x_train, x_val, x_test
 
-# TODO: need to rewrite this function...
-    # the frame should be 
-def make_train_dev_seen_unseen_test_files(frame, dir_suffix, proc_frame_row):
-    """
-    Args:
-        frame (pd.DataFrame): |word|tag|paradigm_i|
-        dir_suffix (str): w_root
-        write_reinflection_line ((pd.DataFrame) => str): Converts row in {frame} to a string representing entry in inflection dataset.
-    """
-    unseen_test_frame_ratio = 0.1
-    unseen_test_frame, rest_frame = obtain_unseen_test_frame(frame, unseen_test_frame_ratio) 
-
-    train_frame, dev_frame, test_frame = obtain_train_dev_test_split(rest_frame, 1 - 2/9, 1/9, 1/9)
-    train_paradigms = set(train_frame['paradigm'].values)
-    test_paradigms = set(test_frame['paradigm'].values)
-    non_train_paradigms = test_paradigms.difference(train_paradigms)
-    non_train_paradigm_frame = test_frame[test_frame['paradigm'].isin(non_train_paradigms)]
-    seen_test_frame = test_frame.drop(non_train_paradigm_frame.index.values, axis=0)
-    unseen_test_frame = pd.concat([non_train_paradigm_frame, unseen_test_frame])
-
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.train', train_frame, proc_frame_row)
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive.dev', dev_frame, proc_frame_row)
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen.test', unseen_test_frame, proc_frame_row)
-    write_mc_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen.test', seen_test_frame, proc_frame_row)
-    make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_unseen-covered', unseen_test_frame)
-    make_covered_test_file("seen_unseen_split" + dir_suffix + '/gitksan_productive_seen-covered', seen_test_frame)
-
-    return non_train_paradigms
 
 def get_target_to_paradigm_mapping(paradigms):
     """Returns a target to paradigm mapping.
@@ -354,3 +239,30 @@ def get_paradigm_inds(inflection_fname):
             paradigm_i = line.split('\t')[-1]
             paradigm_inds.append(paradigm_i)
     return paradigm_inds
+
+def get_all_reduplications(type_split_frame: pd.DataFrame) -> pd.DataFrame:
+    """
+
+    Args:
+        type_split_frame: Frame with word types and morphological glosses (+ 
+            whether from standard/challenge/train/dev).
+
+
+    """
+    git_gloss_redup_series = type_split_frame['gitksan_gloss'].str.contains('~')
+    eng_gloss_redup_series = type_split_frame['eng_gloss'].str.contains('~')
+    morph_gloss_redup_series = type_split_frame['morph'].str.contains('~')
+    return type_split_frame.loc[eng_gloss_redup_series | git_gloss_redup_series | morph_gloss_redup_series]
+
+def get_all_suppletions(type_split_frame: pd.DataFrame) -> pd.DataFrame:
+    """
+
+    Args:
+        type_split_frame: Frame with word types and morphological glosses (+ 
+            whether from standard/challenge/train/dev).
+
+    Returns: 
+        DataFrame with only a few rows. 
+    """
+    git_gloss_supp_series = type_split_frame['gitksan_gloss'].str.contains('.PL')
+    return type_split_frame.loc[git_gloss_supp_series]
