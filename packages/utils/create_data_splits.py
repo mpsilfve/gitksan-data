@@ -2,7 +2,7 @@
     - a standard test split
     - a challenge test split (paradigms unobserved during training).
 """
-from os import sys
+from os import system
 from typing import Tuple, List
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -83,10 +83,10 @@ def add_hallucination_examples(reinflection_frame: pd.DataFrame, save_path: str)
         reinflection_frame (pd.DataFrame): DataFrame with |MSD_src|MSD_tgt|form_src|form_tgt| (among others).
     """
     with open(f"{save_path}/gitksan-train", "w") as sigm_format_train:
-        reinflection_frame.apply(lambda row: sigm_format_train.write(f"{row.form_src}\t{row.form_tgt}\t{combine_tags(row.MSD_src, row.MSD_tag)}"), axis=1)
+        reinflection_frame.apply(lambda row: sigm_format_train.write(f"{row.form_src}\t{row.form_tgt}\t{combine_tags(row.MSD_src, row.MSD_tgt)}\n"), axis=1)
     
-    sys(f"mv {save_path}/gitksan-train $WORKING_DIR/inflection/sample-data")
-    sys(f"packages/utils/hallucinate_gitksan_data.sh {save_path}")
+    system(f"mv {save_path}/gitksan-train /project/rrg-msilfver/fsamir8/inflection/sample-data")
+    system(f"packages/utils/hallucinate_gitksan_data.sh {save_path}")
 
     hallucination_frame = convert_inflection_file_to_frame(f"{save_path}/gitksan-hall")
     reinflection_columns = reinflection_frame.columns.values
