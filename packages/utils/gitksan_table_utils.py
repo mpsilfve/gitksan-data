@@ -239,3 +239,30 @@ def get_paradigm_inds(inflection_fname):
             paradigm_i = line.split('\t')[-1]
             paradigm_inds.append(paradigm_i)
     return paradigm_inds
+
+def get_all_reduplications(type_split_frame: pd.DataFrame) -> pd.DataFrame:
+    """
+
+    Args:
+        type_split_frame: Frame with word types and morphological glosses (+ 
+            whether from standard/challenge/train/dev).
+
+
+    """
+    git_gloss_redup_series = type_split_frame['gitksan_gloss'].str.contains('~')
+    eng_gloss_redup_series = type_split_frame['eng_gloss'].str.contains('~')
+    morph_gloss_redup_series = type_split_frame['morph'].str.contains('~')
+    return type_split_frame.loc[eng_gloss_redup_series | git_gloss_redup_series | morph_gloss_redup_series]
+
+def get_all_suppletions(type_split_frame: pd.DataFrame) -> pd.DataFrame:
+    """
+
+    Args:
+        type_split_frame: Frame with word types and morphological glosses (+ 
+            whether from standard/challenge/train/dev).
+
+    Returns: 
+        DataFrame with only a few rows. 
+    """
+    git_gloss_supp_series = type_split_frame['gitksan_gloss'].str.contains('.PL')
+    return type_split_frame.loc[git_gloss_supp_series]

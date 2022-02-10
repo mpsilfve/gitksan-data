@@ -86,6 +86,7 @@ def test_calculate_mst():
     assert mst_weights != []
 
 def test_obtain_paradigm_frames(dialectal_variation_paradigm):
+    
     filtered_paradigm_frames = obtain_paradigm_frames(dialectal_variation_paradigm)
     frame = filtered_paradigm_frames[0]
     print(frame)

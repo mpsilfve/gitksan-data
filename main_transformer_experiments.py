@@ -4,77 +4,21 @@ import pandas as pd
 import argparse
 from datetime import datetime
 import subprocess
+from typing import List
 
-from packages.utils.constants import STD_CHL_SPLIT_PATH, ONESOURCE_RESULTS_PATH, RESULTS_FNAMES
+from packages.utils.constants import HALLUCINATION_RESULTS_PATH, STD_CHL_SPLIT_PATH, ONESOURCE_RESULTS_PATH, RESULTS_FNAMES
 from packages.pkl_operations.pkl_io import store_csv_dynamic
-from packages.utils.create_data_splits import make_all_pairs_frame, add_hallucination_examples
+from packages.utils.create_data_splits import make_all_pairs_frame, add_hallucination_examples 
 from packages.fairseq.fairseq_format import produce_fairseq_data, reformat_from_frame
 from packages.fairseq.utils import extract_hypotheses, extract_hypotheses_mbr
-from packages.utils.gitksan_table_utils import get_target_to_paradigm_mapping, extract_non_empty_paradigms, convert_inflection_file_to_frame, get_paradigm_inds
+from packages.utils.gitksan_table_utils import get_target_to_paradigm_mapping, extract_non_empty_paradigms, convert_inflection_file_to_frame, get_paradigm_inds, get_all_suppletions, get_all_reduplications
 from packages.utils.utils import map_list 
-from packages.eval.eval import eval_accuracy_oracle, eval_paradigm_accuracy_random, eval_paradigm_accuracy_max, eval_accuracy_per_row
+from packages.eval.eval import eval_accuracy_oracle, eval_paradigm_accuracy_random, eval_paradigm_accuracy_max, eval_accuracy_majority_vote 
 from packages.fairseq.parse_results_files import parse_results_w_logit_file, expand_to_char_frame
 from packages.calibration.temperature_scale import ModelWithTemperature
 
-def produce_fairseq_data_cross_table():
-    """Saves fairseq train/validation/test data
-    """
-    produce_fairseq_data("gitksan_productive.train", "gitksan_productive.dev", "gitksan_productive_seen.test", "gitksan_productive_unseen.test", "data/spreadsheets/seen_unseen_split_w_root_cross_table")
-
-def produce_fairseq_data_regular():
-    """Produces fairseq format data for the `seen_unseen_split_w_root`.
-    """
-    produce_fairseq_data("gitksan_productive.train", "gitksan_productive.dev", "gitksan_productive_seen.test", "gitksan_productive_unseen.test", "data/spreadsheets/seen_unseen_split_w_root")
-
-def produce_fairseq_data_hall():
-    """Produces fairseq format data for the `seen_unseen_split_w_root_hall` directory.
-    """
-    produce_fairseq_data("gitksan_productive_w_hall.train", "gitksan_productive.dev", "gitksan_productive_seen.test", "gitksan_productive_unseen.test", "data/spreadsheets/seen_unseen_split_w_root_hall")
-    subprocess.call("data/spreadsheets/seen_unseen_split_w_root_hall/postproc-fairseq-train-hall.sh")
-
-def eval_fairseq_cross_table_max(inflection_fname, prediction_fname, num_hypotheses):
-    """Conducts PCFP evaluation on the cross-table data augmentation format =)
-    """
-    frame = convert_inflection_file_to_frame(inflection_fname)
-
-    # prediction_fname = "results/2021-11-19/results_seen_test.txt"
-    predictions, confidences = extract_hypotheses(prediction_fname, num_hypotheses)
-    frame['predictions'] = predictions
-    frame['confidences'] = confidences
-
-    cross_tab_paradigm_inds = frame['paradigm_i'].values.copy()
-    frame['paradigm_i'] = map_list( lambda x: int(x.split('_')[0]), cross_tab_paradigm_inds)
-    frame['cross_table_i']= map_list( lambda x: int(x.split('_')[1]), cross_tab_paradigm_inds)
-
-    # all_paradigms = extract_non_empty_paradigms("whitespace-inflection-tables-gitksan-productive.txt")
-    # target_to_paradigm_mapping = get_target_to_paradigm_mapping(all_paradigms)
-
-    # frame['paradigm_i'] = frame.apply(lambda row: target_to_paradigm_mapping[f'{row.target}_{row.target_msd}'], axis=1)
-
-    eval_paradigm_accuracy_max(frame)
-    return frame
-
-def eval_fairseq_cross_table_random(inflection_fname, prediction_fname, num_hypotheses):
-    """Conducts PCFP evaluation on the cross-table data augmentation format =)
-    """
-    frame = convert_inflection_file_to_frame(inflection_fname)
-
-    # prediction_fname = "results/2021-11-19/results_seen_test.txt"
-    predictions, confidences = extract_hypotheses(prediction_fname, num_hypotheses)
-    frame['predictions'] = predictions
-    frame['confidences'] = confidences
-
-    cross_tab_paradigm_inds = frame['paradigm_i'].values.copy()
-    frame['paradigm_i'] = map_list( lambda x: int(x.split('_')[0]), cross_tab_paradigm_inds)
-    frame['cross_table_i']= map_list( lambda x: int(x.split('_')[1]), cross_tab_paradigm_inds)
-
-    eval_paradigm_accuracy_random(frame)
-    eval_accuracy_oracle(frame)
-    eval_accuracy_per_row(frame)
-    return frame
-    
-def eval_fairseq_1_source_random(inflection_fname, prediction_fname, num_hypotheses):
-    """Conducts PCFP evaluation on the cross-table data augmentation format =)
+def eval_fairseq_1_source(inflection_fname, prediction_fname, num_hypotheses):
+    """Conducts PCFP evaluation on the 1-source model.
     """
     frame = pd.read_csv(inflection_fname)
     # frame = convert_inflection_file_to_frame(inflection_fname)
@@ -88,10 +32,14 @@ def eval_fairseq_1_source_random(inflection_fname, prediction_fname, num_hypothe
 
     # frame['paradigm_i'] = frame.apply(lambda row: target_to_paradigm_mapping[f'{row.target}_{row.target_msd}'], axis=1)
 
-    # eval_paradigm_accuracy_random(frame)
-    # eval_accuracy_oracle(frame)
+    print("==================Random accuracy===============")
+    eval_paradigm_accuracy_random(frame)
+    print("==================Oracle accuracy===============")
+    eval_accuracy_oracle(frame)
+    print("==================Max accuracy===============")
     eval_paradigm_accuracy_max(frame)
-    # eval_accuracy_per_row(frame)
+    print("==================Majority vote accuracy===========")
+    eval_accuracy_majority_vote(frame)
     return frame
 
 def eval_fairseq_1_source_max(inflection_fname, prediction_fname, num_hypotheses):
@@ -173,55 +121,123 @@ def pull_onesource_results():
 
     for fname in RESULTS_FNAMES:
         system(f"scp {ONESOURCE_RESULTS_PATH}/{fname} {folder}/{fname}")
+    
+def pull_hallucination_results():
+    date = datetime.today().strftime('%Y-%m-%d')
+    folder = f"results/{date}/onesource"
+    try:
+        makedirs(folder)
+    except FileExistsError:
+        pass
+    for fname in RESULTS_FNAMES:
+        system(f"scp {HALLUCINATION_RESULTS_PATH}/{fname} {folder}/{fname}")
+
+def eval_fairseq_1_source_supp_and_red(results_frame: pd.DataFrame, type_split_fnames: List[str], train_type: str):
+    print("==================Random accuracy===============")
+    type_split_frames = []
+    for type_split_fname in type_split_fnames:
+        type_split_frame = pd.read_csv(type_split_fname)[["paradigm_i", "gitksan_gloss", "MSD", "eng_gloss", "morph"]]
+        type_split_frame = type_split_frame.rename(columns={"MSD": "MSD_tgt"})
+        type_split_frames.append(type_split_frame)
+    type_split_frame = pd.concat(type_split_frames)
+
+    merge_frame = results_frame.merge(type_split_frame, on=["paradigm_i", "MSD_tgt"])
+
+    supp_frame = get_all_suppletions(merge_frame) 
+    eval_paradigm_accuracy_max(supp_frame, True)
+    # eval_accuracy_oracle(supp_frame, True)
+
+    # Test
+    supp_frame_test = get_all_suppletions(type_split_frame)
+    assert (len(supp_frame_test[['MSD_tgt', 'paradigm_i']].drop_duplicates())) == (len(supp_frame[['MSD_tgt','paradigm_i']].drop_duplicates()))
+    # Test
+
+    print(supp_frame[['form_src', 'form_tgt', ]])
+
+    redup_frame = get_all_reduplications(merge_frame)
+    # eval_paradigm_accuracy_max(redup_frame, True)
+    eval_accuracy_oracle(redup_frame, True)
+
+    # Test
+    redup_frame_test = get_all_reduplications(type_split_frame)
+    assert (len(redup_frame_test[['MSD_tgt', 'paradigm_i']].drop_duplicates())) == (len(redup_frame[['MSD_tgt','paradigm_i']].drop_duplicates()))
+    # Test
+
+    print_supp_frame = supp_frame[["form_tgt", "predictions", "form_src", "MSD_src", "MSD_tgt", "confidences", "paradigm_i"]]
+    print_supp_frame.groupby('paradigm_i').apply(pd.DataFrame.sort_values, 'confidences', ascending=False)
+    store_csv_dynamic(print_supp_frame, f"supp_frame_{train_type}")
+
+    print_redup_frame = redup_frame[["form_tgt", "predictions", "form_src", "MSD_src", "MSD_tgt", "confidences", "paradigm_i"]]
+    print_redup_frame.groupby('paradigm_i').apply(pd.DataFrame.sort_values, 'confidences', ascending=False)
+    store_csv_dynamic(print_redup_frame, f"redup_frame_{train_type}")
+
+    # eval_accuracy_oracle(frame)
+    # print("==================Max accuracy===============")
+    # eval_paradigm_accuracy_max(frame)
+    # print("==================Majority vote accuracy===========")
+    # eval_accuracy_majority_vote(frame)
+    return results_frame
+
+def _get_results_frame(inflection_fname: str, prediction_fname: str, num_hypotheses: str) -> pd.DataFrame:
+    results_frame = pd.read_csv(inflection_fname)
+    # frame = convert_inflection_file_to_frame(inflection_fname)
+
+    predictions, confidences = extract_hypotheses(prediction_fname, num_hypotheses)
+    results_frame['predictions'] = predictions
+    results_frame['confidences'] = confidences
+    return results_frame
 
 def main(args):
-    if args.produce_fairseq_data_cross_table:
-        produce_fairseq_data_cross_table()
-    elif args.produce_fairseq_data_regular:
-        produce_fairseq_data_regular()
-    elif args.produce_fairseq_data_hall:
-        produce_fairseq_data_hall()
-    elif args.eval_fairseq_cross_table_random:
-        inflection_fname_prefix = "data/spreadsheets/seen_unseen_split_w_root_cross_table"
-        prediction_fname_prefix = "results/2021-11-22/cross_table"
-        eval_fairseq_cross_table_random(f"{inflection_fname_prefix}/gitksan_productive_seen.test", f"{prediction_fname_prefix}/results_seen_test.txt", 5)
-        eval_fairseq_cross_table_random(f"{inflection_fname_prefix}/gitksan_productive_unseen.test", f"{prediction_fname_prefix}/results_unseen_test.txt", 5)
-    elif args.eval_fairseq_1_source_random:
+    if args.eval_fairseq_1_source:
         inflection_fname_prefix = f"{STD_CHL_SPLIT_PATH}/cross_product_source"
         prediction_fname_prefix = "results/2022-01-30/onesource"
-        eval_fairseq_1_source_random(f"{inflection_fname_prefix}/challenge_test_frame.csv", f"{prediction_fname_prefix}/results_challenge_test.txt", 5)
-        eval_fairseq_1_source_random(f"{inflection_fname_prefix}/standard_test_frame.csv", f"{prediction_fname_prefix}/results_standard_test.txt", 5)
-    elif args.eval_fairseq_1_source_max:
-        inflection_fname_prefix = "data/spreadsheets/seen_unseen_split_w_root"
-        prediction_fname_prefix = "results/2021-11-19/1_source"
-        eval_fairseq_1_source_max(f"{inflection_fname_prefix}/gitksan_productive_seen.test", f"{prediction_fname_prefix}/results_seen_test_sampling.txt", 5)
-        eval_fairseq_1_source_max(f"{inflection_fname_prefix}/gitksan_productive_unseen.test", f"{prediction_fname_prefix}/results_unseen_test_sampling.txt", 4)
-    elif args.eval_fairseq_hallucination_random:
-        inflection_fname_prefix = "data/spreadsheets/seen_unseen_split_w_root_hall"
-        prediction_fname_prefix = "results/2021-12-11"
-        eval_fairseq_1_source_random(f"{inflection_fname_prefix}/gitksan_productive_seen.test", f"{prediction_fname_prefix}/results_seen_test.txt", 5)
-        eval_fairseq_1_source_random(f"{inflection_fname_prefix}/gitksan_productive_unseen.test", f"{prediction_fname_prefix}/results_unseen_test.txt", 5)
+        eval_fairseq_1_source(f"{inflection_fname_prefix}/challenge_test_frame.csv", f"{prediction_fname_prefix}/results_challenge_test.txt", 5)
+        eval_fairseq_1_source(f"{inflection_fname_prefix}/standard_test_frame.csv", f"{prediction_fname_prefix}/results_standard_test.txt", 5)
+    elif args.eval_fairseq_hallucination:
+        inflection_fname_prefix = f"{STD_CHL_SPLIT_PATH}/cross_product_hallucination"
+        prediction_fname_prefix = "results/2022-02-03/onesource"
+        eval_fairseq_1_source(f"{inflection_fname_prefix}/challenge_test_frame.csv", f"{prediction_fname_prefix}/results_challenge_test.txt", 5)
+        eval_fairseq_1_source(f"{inflection_fname_prefix}/standard_test_frame.csv", f"{prediction_fname_prefix}/results_standard_test.txt", 5)
+    elif args.eval_fairseq_1_source_supp_and_red_1_source:
+        inflection_fname_prefix = f"{STD_CHL_SPLIT_PATH}/cross_product_source"
+        prediction_fname_prefix = "results/2022-01-30/onesource"
+        challenge_results_frame = _get_results_frame(f"{inflection_fname_prefix}/challenge_test_frame.csv", f"{prediction_fname_prefix}/results_challenge_test.txt", 5)
+        standard_results_frame = _get_results_frame(f"{inflection_fname_prefix}/standard_test_frame.csv", f"{prediction_fname_prefix}/results_standard_test.txt", 5)
+        # all_results_frame = pd.concat([challenge_results_frame, standard_results_frame])
+        all_results_frame = pd.concat([standard_results_frame])
+        # eval_fairseq_1_source_supp_and_red(all_results_frame, [f"{STD_CHL_SPLIT_PATH}/standard_test_frame.csv",f"{STD_CHL_SPLIT_PATH}/challenge_test_frame.csv"], "1_source")
+        eval_fairseq_1_source_supp_and_red(all_results_frame, [f"{STD_CHL_SPLIT_PATH}/standard_test_frame.csv"], "1_source")
+    elif args.eval_fairseq_1_source_supp_and_red_hall:
+        inflection_fname_prefix = f"{STD_CHL_SPLIT_PATH}/cross_product_hallucination"
+        prediction_fname_prefix = "results/2022-02-03/onesource"
+        challenge_results_frame = _get_results_frame(f"{inflection_fname_prefix}/challenge_test_frame.csv", f"{prediction_fname_prefix}/results_challenge_test.txt", 5)
+        standard_results_frame = _get_results_frame(f"{inflection_fname_prefix}/standard_test_frame.csv", f"{prediction_fname_prefix}/results_standard_test.txt", 5)
+        all_results_frame = pd.concat([ standard_results_frame])
+        eval_fairseq_1_source_supp_and_red(all_results_frame, [f"{STD_CHL_SPLIT_PATH}/standard_test_frame.csv"], "hall")
     elif args.generate_fairseq_files_all_pairs:
         generate_fairseq_files_all_pairs()
     elif args.generate_fairseq_files_hallucination:
         generate_fairseq_files_hallucination()
     elif args.pull_onesource_results:
         pull_onesource_results()
-
+    elif args.pull_hallucination_results:
+        pull_hallucination_results()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--pull_onesource_results', action='store_true')
+    parser.add_argument('--pull_hallucination_results', action='store_true')
     parser.add_argument('--produce_fairseq_data_cross_table', action='store_true')
     parser.add_argument('--generate_fairseq_files_all_pairs', action='store_true')
     parser.add_argument('--generate_fairseq_files_hallucination', action='store_true')
     parser.add_argument('--produce_fairseq_data_regular', action='store_true')
     parser.add_argument('--produce_fairseq_data_hall', action='store_true')
     parser.add_argument('--eval_fairseq_cross_table_random', action='store_true')
-    parser.add_argument('--eval_fairseq_hallucination_random', action='store_true')
-    parser.add_argument('--eval_fairseq_1_source_random', action='store_true')
+    parser.add_argument('--eval_fairseq_hallucination', action='store_true')
+    parser.add_argument('--eval_fairseq_1_source', action='store_true')
     parser.add_argument('--eval_fairseq_hallucination_max', action='store_true')
     parser.add_argument('--eval_fairseq_1_source_max', action='store_true')
-    parser.add_argument('--optimize_temperature_global', action='store_true')
+    parser.add_argument('--eval_fairseq_1_source_supp_and_red_1_source', action='store_true')
+    parser.add_argument('--eval_fairseq_1_source_supp_and_red_hall', action='store_true')
 
     main(parser.parse_args())
