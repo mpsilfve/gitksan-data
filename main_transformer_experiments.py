@@ -14,9 +14,9 @@ from packages.pkl_operations.pkl_io import store_csv_dynamic
 from packages.utils.create_data_splits import make_all_pairs_frame, add_hallucination_examples 
 from packages.fairseq.fairseq_format import combine_tags, produce_fairseq_data, reformat_from_frame
 from packages.fairseq.utils import extract_hypotheses, extract_hypotheses_mbr
+from packages.utils.utils import map_list, try_makedirs
 from packages.utils.gitksan_table_utils import get_target_to_paradigm_mapping, extract_non_empty_paradigms, convert_inflection_file_to_frame, get_paradigm_inds, get_all_suppletions, get_all_reduplications
-from packages.utils.utils import map_list 
-from packages.eval.eval import eval_accuracy_oracle, eval_paradigm_accuracy_random, eval_paradigm_accuracy_max, eval_accuracy_majority_vote , find_off_by_one_predictions_max
+from packages.eval.eval import eval_accuracy_oracle, eval_paradigm_accuracy_random, eval_paradigm_accuracy_max, eval_accuracy_majority_vote 
 from packages.fairseq.parse_results_files import parse_results_w_logit_file, expand_to_char_frame
 from packages.calibration.temperature_scale import ModelWithTemperature
 from packages.visualizations.plot_summary_distributions import plot_edit_distance_jitter
@@ -89,6 +89,7 @@ def generate_fairseq_files(split_type_to_frame, aug_strategy, split_path):
 
     inflection_frame_save_path = f"{split_path}/{aug_strategy}"
     fairseq_save_dir = f"{inflection_frame_save_path}/fairseq"
+    try_makedirs(fairseq_save_dir)
 
     train_frame = split_type_to_frame["train"]
     dev_frame = split_type_to_frame["dev"]
@@ -99,7 +100,7 @@ def generate_fairseq_files(split_type_to_frame, aug_strategy, split_path):
         if split_type == "train":
             reinflection_frame = make_reinflection_frame(train_frame, train_frame)
             if aug_strategy == "cross_product_hallucination":
-                reinflection_frame = add_hallucination_examples(reinflection_frame)
+                reinflection_frame = add_hallucination_examples(reinflection_frame, inflection_frame_save_path)
             store_csv_dynamic(reinflection_frame, "train_frame", root_folder=inflection_frame_save_path, include_date=False)
             reformat_from_frame(reinflection_frame, f"{fairseq_save_dir}/gitksan-train.src", f"{fairseq_save_dir}/gitksan-train.tgt")
         elif split_type == "dev":
@@ -132,7 +133,7 @@ def generate_fairseq_files_hallucination():
         "standard_test": pd.read_csv(f"{STD_CHL_SPLIT_PATH}/standard_test_frame.csv"),
         "challenge_test": pd.read_csv(f"{STD_CHL_SPLIT_PATH}/challenge_test_frame.csv")
     }
-    generate_fairseq_files(split_type_to_frame, "cross_product_w_hallucination", STD_CHL_SPLIT_PATH)
+    generate_fairseq_files(split_type_to_frame, "cross_product_hallucination", STD_CHL_SPLIT_PATH)
 
 def pull_onesource_results():
     date = datetime.today().strftime('%Y-%m-%d')
