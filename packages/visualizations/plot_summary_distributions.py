@@ -61,3 +61,7 @@ def plot_msd_distribution(frame):
     plt.tick_params(axis='both', labelsize='large')
     plt.tight_layout()
     store_pic_dynamic(plt, 'paradigm_msd_dist', 'results', True)
+
+def plot_edit_distance_jitter(results_frame):
+    sns.countplot(x='source_gold_dist', hue='model_type', data=results_frame)
+    store_pic_dynamic(plt, 'source_gold_dist', 'results')

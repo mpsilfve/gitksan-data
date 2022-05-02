@@ -144,6 +144,8 @@ def calculate_mst_weights_for_perms(perms):
         graph_mst = obtain_mst(graph)
         mst_weight = calculate_mst_weight(graph_mst)
         mst_weights.append(mst_weight)
+        print(f"Permutation: {perm}")
+        print(f"weight: {mst_weight}")
     return mst_weights
 
 def extract_non_empty_paradigms(paradigm_fname):
@@ -264,5 +266,5 @@ def get_all_suppletions(type_split_frame: pd.DataFrame) -> pd.DataFrame:
     Returns: 
         DataFrame with only a few rows. 
     """
-    git_gloss_supp_series = type_split_frame['gitksan_gloss'].str.contains('.PL')
+    git_gloss_supp_series = type_split_frame['gitksan_gloss'].str.contains('.PL', regex=False)
     return type_split_frame.loc[git_gloss_supp_series]

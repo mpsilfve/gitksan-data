@@ -103,8 +103,12 @@ def eval_accuracy_majority_vote(results_frame: pd.DataFrame, use_wf_accuracy: bo
         total += 1
     print(f"Majority vote PCFP accuracy: {num_correct/total}")
     print(f"Majority vote correct paradigms: {sorted(correct_paradigms)}")
-# def eval_accuracy_weighted_majority():
-#     """[summary]
-#     """
-#     pass
 
+def find_off_by_one_predictions_max(results_frame: pd.DataFrame) -> pd.DataFrame:
+    results_frame = results_frame.sort_values(by='confidences', ascending=False)
+    eval_frame = results_frame.drop_duplicates(subset=['MSD_tgt', 'paradigm_i'], keep='first') 
+    eval_frame['off_by_1'] = eval_frame[['predictions', 'form_tgt']].apply(lambda row: distance(row.predictions, row.form_tgt) == 1, axis=1)
+    return eval_frame[eval_frame['off_by_1']]
+    
+
+        
