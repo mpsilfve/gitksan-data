@@ -13,9 +13,17 @@ import pandas as pd
 from io import StringIO
 
 SCRIPT_PATH=Path(__file__).absolute()
+
+# Path to directory with the CSV file containing a manually prepared
+# file containing forms which need to be filtered out
 MISC_PATH=SCRIPT_PATH.parents[1]/"misc"
 
+# Empty forms in inflection tables correspond to lines containing
+# exclusively underscores
 EMPTY=set("_")
+
+# Column number 3 in inflection tables gives the orthographic form
+ORTHOGRAPHIC=3
 
 def read_tables(data_fn):
     with open(data_fn) as f:
@@ -66,7 +74,7 @@ def main(data_fn):
         excluded = 0
         for tab in tables:
             if has_root(tab) and not has_non_root(tab):
-                roots = tab.loc[tab[0] == "ROOT"][3].values.tolist()
+                roots = tab.loc[tab[0] == "ROOT"][ORTHOGRAPHIC].values.tolist()
                 if filtered_roots.intersection(roots) != set():
                     excluded += 1
                     continue
