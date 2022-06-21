@@ -1,6 +1,6 @@
 # Gitksan inflection tables
 
-The main resource is the file `gitksan-inflection-tables.txt`. The tables are documented in the LREC 2022 paper:
+The main resource is the file `gitksan-inflection-tables.txt`. The resource is documented in the LREC 2022 paper:
 
 ```
 @InProceedings{oliver-EtAl:2022:LREC,
