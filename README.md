@@ -16,6 +16,10 @@ The main resource is the file `gitksan-inflection-tables.txt`. The resource is d
 }
 ```
 
+## Updates
+
+* June 20: Filtered out 117 tables which do not represent noun or verb lexemes 
+
 ## TODO
 
 * Some forms have lost their initial "'" (e.g. "'nii" -> "nii"). 
