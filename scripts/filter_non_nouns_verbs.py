@@ -14,12 +14,11 @@ from io import StringIO
 
 SCRIPT_PATH=Path(__file__).absolute()
 
-# Path to directory with the CSV file containing a manually prepared
-# file containing forms which need to be filtered out
+# Path to directory with a manually prepared CSV file containing
+# lexemes which need to be filtered out
 MISC_PATH=SCRIPT_PATH.parents[1]/"misc"
 
-# Empty forms in inflection tables correspond to lines containing
-# exclusively underscores
+# Empty slots in inflection tables correspond to lines of underscores
 EMPTY=set("_")
 
 # Column number 3 in inflection tables gives the orthographic form
