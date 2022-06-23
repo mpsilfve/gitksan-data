@@ -28,4 +28,6 @@ The main resource is the file `gitksan-inflection-tables.txt`. The resource is d
 
 ## License
 
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/3.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License</a>.
+
 For now, we release the data lincensed under the [Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported license (CC BY-NC-ND 3.0)](https://creativecommons.org/licenses/by-nc-nd/3.0/). Please get in touch with the authors if you need a more permissive license.
